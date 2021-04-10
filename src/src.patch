@@ -1,0 +1,1188 @@
+diff --git a/minecraft/net/minecraft/src/ContainerWorkbench.java b/minecraft/net/minecraft/src/ContainerWorkbench.java
+index a1d0ca5..3e21434 100644
+--- a/minecraft/net/minecraft/src/ContainerWorkbench.java
++++ b/minecraft/net/minecraft/src/ContainerWorkbench.java
+@@ -9,6 +9,7 @@ public class ContainerWorkbench extends Container
+     private int posX;
+     private int posY;
+     private int posZ;
++    private static boolean isWood = false;
+ 
+     public ContainerWorkbench(InventoryPlayer par1InventoryPlayer, World par2World, int par3, int par4, int par5)
+     {
+@@ -49,7 +50,22 @@ public class ContainerWorkbench extends Container
+      */
+     public void onCraftMatrixChanged(IInventory par1IInventory)
+     {
+-        this.craftResult.setInventorySlotContents(0, CraftingManager.getInstance().findMatchingRecipe(this.craftMatrix, this.worldObj));
++    	if (worldObj.getBlockId(posX, posY, posZ) == 1030)
++    	{
++    		isWood = true;
++    	}
++    	if (worldObj.getBlockId(posX, posY, posZ) == Block.anvil.blockID)
++    	{
++    		isWood = false;
++    	}
++    	ItemStack result = CraftingManager.getInstance().findMatchingRecipe(craftMatrix, worldObj);
++    	boolean denied =
++    			isWood &&
++    			result != null &&
++    			result.itemID == Item.pickaxeIron.itemID;
++    	
++    	if(!denied)
++    		this.craftResult.setInventorySlotContents(0, CraftingManager.getInstance().findMatchingRecipe(this.craftMatrix, this.worldObj));
+     }
+ 
+     /**
+diff --git a/minecraft/net/minecraft/src/EntityCreature.java b/minecraft/net/minecraft/src/EntityCreature.java
+index 0eb8b2c..f6da12a 100644
+--- a/minecraft/net/minecraft/src/EntityCreature.java
++++ b/minecraft/net/minecraft/src/EntityCreature.java
+@@ -45,7 +45,7 @@ public abstract class EntityCreature extends EntityLiving
+         }
+ 
+         this.hasAttacked = this.isMovementCeased();
+-        float var1 = 16.0F;
++        float var1 = 32.0F;
+ 
+         if (this.entityToAttack == null)
+         {
+diff --git a/minecraft/net/minecraft/src/EntityCreeper.java b/minecraft/net/minecraft/src/EntityCreeper.java
+index 6e13caa..37e52ce 100644
+--- a/minecraft/net/minecraft/src/EntityCreeper.java
++++ b/minecraft/net/minecraft/src/EntityCreeper.java
+@@ -138,11 +138,11 @@ public class EntityCreeper extends EntityMob
+ 
+                     if (this.getPowered())
+                     {
+-                        this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, (float)(this.explosionRadius * 2), var2);
++                        this.worldObj.newExplosion(this, this.posX, this.posY, this.posZ, (float)(this.explosionRadius * 2), true, var2);
+                     }
+                     else
+                     {
+-                        this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, var2);
++                        this.worldObj.newExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, true, var2);
+                     }
+ 
+                     this.setDead();
+diff --git a/minecraft/net/minecraft/src/EntityFishHook.java b/minecraft/net/minecraft/src/EntityFishHook.java
+index 8b1ffab..af1f913 100644
+--- a/minecraft/net/minecraft/src/EntityFishHook.java
++++ b/minecraft/net/minecraft/src/EntityFishHook.java
+@@ -534,7 +534,7 @@ public class EntityFishHook extends Entity
+ 
+         for (int var4 = var1 - 2; var4 <= var1 + 2; ++var4)
+         {
+-            for (int var5 = var2 - 2; var5 <= var2; ++var5)
++            for (int var5 = var2 - 1; var5 <= var2; ++var5)
+             {
+                 for (int var6 = var3 - 2; var6 <= var3 + 2; ++var6)
+                 {
+@@ -570,7 +570,7 @@ public class EntityFishHook extends Entity
+ 
+                     if (this.worldObj.IsPrecipitatingAtPos(MathHelper.floor_double(this.posX), MathHelper.floor_double(this.posZ)))
+                     {
+-                        var1 /= 2;
++                        var1 /= 20;
+                     }
+                 }
+             }
+@@ -583,7 +583,7 @@ public class EntityFishHook extends Entity
+ 
+                 if (this.worldObj.IsPrecipitatingAtPos(MathHelper.floor_double(this.posX), MathHelper.floor_double(this.posZ)))
+                 {
+-                    var1 /= 2;
++                    var1 /= 6;
+                 }
+             }
+ 
+diff --git a/minecraft/net/minecraft/src/EntityItem.java b/minecraft/net/minecraft/src/EntityItem.java
+index 4702b95..2ccb21e 100644
+--- a/minecraft/net/minecraft/src/EntityItem.java
++++ b/minecraft/net/minecraft/src/EntityItem.java
+@@ -698,7 +698,7 @@ public class EntityItem extends Entity
+ 
+     public void SetEntityItemAsDroppedOnPlayerDeath(EntityPlayer var1)
+     {
+-        this.m_lAbsoluteItemDespawnTime = MinecraftServer.getServer().worldServers[0].getTotalWorldTime() + 24000L;
++        this.m_lAbsoluteItemDespawnTime = MinecraftServer.getServer().worldServers[0].getTotalWorldTime() + 14400000L;
+     }
+ 
+     public static boolean InstallationIntegrityTestEntityItem()
+diff --git a/minecraft/net/minecraft/src/EntityPlayer.java b/minecraft/net/minecraft/src/EntityPlayer.java
+index cf4099d..94c20a1 100644
+--- a/minecraft/net/minecraft/src/EntityPlayer.java
++++ b/minecraft/net/minecraft/src/EntityPlayer.java
+@@ -6,6 +6,7 @@ import java.util.List;
+ 
+ public abstract class EntityPlayer extends EntityLiving implements ICommandSender
+ {
++	public static final int YY_EXTRA_HEALTH = 20;
+     /** Inventory of the player */
+     public InventoryPlayer inventory = new InventoryPlayer(this);
+     private InventoryEnderChest theInventoryEnderChest = new InventoryEnderChest();
+@@ -142,7 +143,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 
+     public int getMaxHealth()
+     {
+-        return 20;
++        return 20+YY_EXTRA_HEALTH;
+     }
+ 
+     protected void entityInit()
+@@ -2281,12 +2282,12 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 
+     public boolean CanJump()
+     {
+-        return this.health > 4 && this.foodStats.getFoodLevel() > 12 && (int)this.foodStats.getSaturationLevel() < 18;
++    	return this.GetHealthPenaltyLevel() <= 3 && this.GetHungerPenaltyLevel() <= 2 && this.GetFatPenaltyLevel() <= 3;
+     }
+ 
+     public boolean CanSwim()
+     {
+-        return !this.isWeighted() && this.health > 4;
++        return !this.isWeighted() && this.GetHealthPenaltyLevel() <= 3;
+     }
+ 
+     protected int GetWornArmorWeight()
+@@ -2475,7 +2476,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 
+     public boolean HasStatusPenalty()
+     {
+-        return this.getHealth() <= 10 || this.foodStats.getFoodLevel() <= 24 || (int)this.foodStats.getSaturationLevel() >= 12;
++    	return this.GetHealthPenaltyLevel() > 0 || this.GetHungerPenaltyLevel() > 0 || this.GetFatPenaltyLevel() > 0;
+     }
+ 
+     public int GetMaximumStatusPenaltyLevel()
+@@ -2936,7 +2937,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+     protected boolean IsPlayerHoldingSail()
+     {
+         ItemStack var1 = this.inventory.mainInventory[this.inventory.currentItem];
+-        return var1 != null ? var1.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID : false;
++        int slot = inventory.currentItem;
++        ItemStack nextStack = inventory.getStackInSlot((slot+1)%9);
++        ItemStack prevStack = inventory.getStackInSlot((slot+8)%9);
++        boolean o = inventory.getCurrentItem() != null &&
++        		inventory.getCurrentItem().itemID == Item.map.itemID &&
++        		(
++        				(nextStack != null && nextStack.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID) ||
++        				(prevStack != null && prevStack.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID)
++        				);
++        return (var1 != null ? var1.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID : false) || o;
+     }
+ 
+     public boolean AppliesConstantForceWhenRidingBoat()
+diff --git a/minecraft/net/minecraft/src/EntityPlayerMP.java b/minecraft/net/minecraft/src/EntityPlayerMP.java
+index 6ef6b3f..812c8d0 100644
+--- a/minecraft/net/minecraft/src/EntityPlayerMP.java
++++ b/minecraft/net/minecraft/src/EntityPlayerMP.java
+@@ -1119,19 +1119,19 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+         int var1 = (int)this.foodStats.getSaturationLevel();
+         byte var2 = 4;
+ 
+-        if (var1 < 12)
++        if (var1 < 26)
+         {
+             var2 = 0;
+         }
+-        else if (var1 < 14)
++        else if (var1 < 29)
+         {
+             var2 = 1;
+         }
+-        else if (var1 < 16)
++        else if (var1 < 32)
+         {
+             var2 = 2;
+         }
+-        else if (var1 < 18)
++        else if (var1 < 36)
+         {
+             var2 = 3;
+         }
+@@ -1144,19 +1144,19 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+         int var1 = this.foodStats.getFoodLevel();
+         byte var2 = 5;
+ 
+-        if (var1 > 24)
++        if (var1 > 36)
+         {
+             var2 = 0;
+         }
+-        else if (var1 > 18)
++        else if (var1 > 27)
+         {
+             var2 = 1;
+         }
+-        else if (var1 > 12)
++        else if (var1 > 18)
+         {
+             var2 = 2;
+         }
+-        else if (var1 > 6)
++        else if (var1 > 9)
+         {
+             var2 = 3;
+         }
+@@ -1173,23 +1173,23 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+         int var1 = this.getHealth();
+         byte var2 = 5;
+ 
+-        if (var1 > 10)
++        if (var1 > 15)
+         {
+             var2 = 0;
+         }
+-        else if (var1 > 8)
++        else if (var1 > 12)
+         {
+             var2 = 1;
+         }
+-        else if (var1 > 6)
++        else if (var1 > 9)
+         {
+             var2 = 2;
+         }
+-        else if (var1 > 4)
++        else if (var1 > 6)
+         {
+             var2 = 3;
+         }
+-        else if (var1 > 2)
++        else if (var1 > 3)
+         {
+             var2 = 4;
+         }
+diff --git a/minecraft/net/minecraft/src/FoodStats.java b/minecraft/net/minecraft/src/FoodStats.java
+index e68f13d..b297d67 100644
+--- a/minecraft/net/minecraft/src/FoodStats.java
++++ b/minecraft/net/minecraft/src/FoodStats.java
+@@ -2,8 +2,9 @@ package net.minecraft.src;
+ 
+ public class FoodStats
+ {
++	private int YY_FOOD = 120;
+     /** The player's food level. */
+-    private int foodLevel = 60;
++    private int foodLevel = YY_FOOD;
+ 
+     /** The player's food saturation. */
+     private float foodSaturationLevel = 0.0F;
+@@ -13,7 +14,7 @@ public class FoodStats
+ 
+     /** The player's food timer value. */
+     private int foodTimer = 0;
+-    private int prevFoodLevel = 60;
++    private int prevFoodLevel = YY_FOOD;
+ 
+     /**
+      * Eat some food.
+@@ -41,14 +42,14 @@ public class FoodStats
+                 this.foodSaturationLevel = 0.0F;
+             }
+ 
+-            if (this.foodLevel > 60 || this.foodLevel < 0)
++            if (this.foodLevel > YY_FOOD || this.foodLevel < 0)
+             {
+-                this.foodLevel = 60;
++                this.foodLevel = YY_FOOD;
+             }
+ 
+-            if (this.foodSaturationLevel > 20.0F || this.foodSaturationLevel < 0.0F)
++            if (this.foodSaturationLevel > 40.0F || this.foodSaturationLevel < 0.0F)
+             {
+-                this.foodSaturationLevel = 20.0F;
++                this.foodSaturationLevel = 40.0F;
+             }
+         }
+     }
+@@ -83,7 +84,7 @@ public class FoodStats
+      */
+     public boolean needFood()
+     {
+-        return this.foodLevel < 60;
++        return this.foodLevel < YY_FOOD;
+     }
+ 
+     /**
+@@ -118,12 +119,12 @@ public class FoodStats
+     public void addStats(int par1, float par2)
+     {
+         int var3 = this.foodLevel;
+-        this.foodLevel = Math.min(par1 + this.foodLevel, 60);
++        this.foodLevel = Math.min(par1 + this.foodLevel, YY_FOOD);
+         int var4 = par1 - (this.foodLevel - var3);
+ 
+         if (var4 > 0)
+         {
+-            this.foodSaturationLevel = Math.min(this.foodSaturationLevel + (float)var4 * par2 / 3.0F, 20.0F);
++            this.foodSaturationLevel = Math.min(this.foodSaturationLevel + (float)var4 * par2 / 3.0F, 40.0F);
+         }
+     }
+ 
+@@ -153,12 +154,12 @@ public class FoodStats
+         {
+             this.foodExhaustionLevel = 0.0F;
+         }
+-
+-        if (this.foodLevel > 24 && par1EntityPlayer.shouldHeal())
++        
++        if (par1EntityPlayer.GetHungerPenaltyLevel() == 0 && par1EntityPlayer.shouldHeal())
+         {
+             ++this.foodTimer;
+ 
+-            if (this.foodTimer >= 600)
++            if (this.foodTimer >= 6000)
+             {
+                 par1EntityPlayer.heal(1);
+                 this.foodTimer = 0;
+diff --git a/minecraft/net/minecraft/src/GuiIngame.java b/minecraft/net/minecraft/src/GuiIngame.java
+index e47a972..cf61739 100644
+--- a/minecraft/net/minecraft/src/GuiIngame.java
++++ b/minecraft/net/minecraft/src/GuiIngame.java
+@@ -89,7 +89,7 @@ public class GuiIngame extends Gui
+             }
+         }
+ 
+-        int var11;
++        int health;
+         int var12;
+         int var13;
+         int var14;
+@@ -123,7 +123,7 @@ public class GuiIngame extends Gui
+                 var37 = false;
+             }
+ 
+-            var11 = this.mc.thePlayer.getHealth();
++            health = this.mc.thePlayer.getHealth();
+             var12 = this.mc.thePlayer.prevHealth;
+             this.rand.setSeed((long)(this.updateCounter * 312871));
+             boolean var25 = false;
+@@ -157,7 +157,7 @@ public class GuiIngame extends Gui
+                 }
+ 
+                 var22 = var7 - 39;
+-                var18 = var22 - 10;
++                var18 = var22 - 20;
+                 var17 = this.mc.thePlayer.getTotalArmorValue();
+                 int var19 = -1;
+ 
+@@ -168,25 +168,25 @@ public class GuiIngame extends Gui
+ 
+                 this.mc.mcProfiler.endStartSection("healthArmor");
+                 int var30;
+-                int var42;
++                int i_10;
+ 
+-                for (var42 = 0; var42 < 10; ++var42)
++                for (i_10 = 0; i_10 < 10; ++i_10)
+                 {
+                     if (var17 > 0)
+                     {
+-                        var21 = var15 + var42 * 8;
++                        var21 = var15 + i_10 * 8;
+ 
+-                        if (var42 * 2 + 1 < var17)
++                        if (i_10 * 2 + 1 < var17)
+                         {
+                             this.drawTexturedModalRect(var21, var18, 34, 9, 9, 9);
+                         }
+ 
+-                        if (var42 * 2 + 1 == var17)
++                        if (i_10 * 2 + 1 == var17)
+                         {
+                             this.drawTexturedModalRect(var21, var18, 25, 9, 9, 9);
+                         }
+ 
+-                        if (var42 * 2 + 1 > var17)
++                        if (i_10 * 2 + 1 > var17)
+                         {
+                             this.drawTexturedModalRect(var21, var18, 16, 9, 9, 9);
+                         }
+@@ -210,15 +210,15 @@ public class GuiIngame extends Gui
+                         var20 = 1;
+                     }
+ 
+-                    var30 = var15 + var42 * 8;
++                    var30 = var15 + i_10 * 8;
+                     int var29 = var22;
+ 
+-                    if (var11 <= 4)
++                    if (health <= 4)
+                     {
+                         var29 = var22 + this.rand.nextInt(2);
+                     }
+ 
+-                    if (var42 == var19)
++                    if (i_10 == var19)
+                     {
+                         var29 -= 2;
+                     }
+@@ -229,31 +229,63 @@ public class GuiIngame extends Gui
+                     {
+                         var31 = 5;
+                     }
++                    
++                    int var29_2 = var22-10;
++                    if (health <= 4)
++                    {
++                        var29_2 += this.rand.nextInt(2);
++                    }
++                    if (i_10 + 10 == var19)
++                    {
++                    	var29_2 -= 2;
++                    }
++                    
+ 
+                     this.drawTexturedModalRect(var30, var29, 16 + var20 * 9, 9 * var31, 9, 9);
++                    this.drawTexturedModalRect(var30, var29_2, 16 + var20 * 9, 9 * var31, 9, 9);
+ 
+                     if (var37)
+                     {
+-                        if (var42 * 2 + 1 < var12)
++                        if (i_10 * 2 + 1 < var12)
+                         {
+                             this.drawTexturedModalRect(var30, var29, var21 + 54, 9 * var31, 9, 9);
+                         }
+ 
+-                        if (var42 * 2 + 1 == var12)
++                        if (i_10 * 2 + 1 == var12)
+                         {
+                             this.drawTexturedModalRect(var30, var29, var21 + 63, 9 * var31, 9, 9);
+                         }
++                        /*
++                        if (i_10 * 2 + 1 < var12-20)
++                        {
++                            this.drawTexturedModalRect(var30, var29-10, var21 + 54, 9 * var31, 9, 9);
++                        }
++
++                        if (i_10 * 2 + 1 == var12-20)
++                        {
++                            this.drawTexturedModalRect(var30, var29-10, var21 + 63, 9 * var31, 9, 9);
++                        }*/
+                     }
+ 
+-                    if (var42 * 2 + 1 < var11)
++                    if (i_10 * 2 + 1 < health)
+                     {
+                         this.drawTexturedModalRect(var30, var29, var21 + 36, 9 * var31, 9, 9);
+                     }
+ 
+-                    if (var42 * 2 + 1 == var11)
++                    if (i_10 * 2 + 1 == health)
+                     {
+                         this.drawTexturedModalRect(var30, var29, var21 + 45, 9 * var31, 9, 9);
+                     }
++                    
++                    if (i_10 * 2 + 1 < health-20)
++                    {
++                        this.drawTexturedModalRect(var30, var29_2, var21 + 36, 9 * var31, 9, 9);
++                    }
++
++                    if (i_10 * 2 + 1 == health-20)
++                    {
++                        this.drawTexturedModalRect(var30, var29_2, var21 + 45, 9 * var31, 9, 9);
++                    }
+                 }
+ 
+                 this.mc.mcProfiler.endStartSection("food");
+@@ -270,9 +302,9 @@ public class GuiIngame extends Gui
+                 }
+                 else
+                 {
+-                    var42 = this.mc.thePlayer.getAir();
+-                    var21 = MathHelper.ceiling_double_int((double)(var42 - 2) * 10.0D / 300.0D);
+-                    var23 = MathHelper.ceiling_double_int((double)var42 * 10.0D / 300.0D) - var21;
++                    i_10 = this.mc.thePlayer.getAir();
++                    var21 = MathHelper.ceiling_double_int((double)(i_10 - 2) * 10.0D / 300.0D);
++                    var23 = MathHelper.ceiling_double_int((double)i_10 * 10.0D / 300.0D) - var21;
+ 
+                     for (var30 = 0; var30 < var21 + var23; ++var30)
+                     {
+@@ -324,8 +356,8 @@ public class GuiIngame extends Gui
+                 var38 = 1.0F - (float)(var39 - 100) / 10.0F;
+             }
+ 
+-            var11 = (int)(220.0F * var38) << 24 | 1052704;
+-            drawRect(0, 0, var6, var7, var11);
++            health = (int)(220.0F * var38) << 24 | 1052704;
++            drawRect(0, 0, var6, var7, health);
+             GL11.glEnable(GL11.GL_ALPHA_TEST);
+             GL11.glEnable(GL11.GL_DEPTH_TEST);
+             this.mc.mcProfiler.endSection();
+@@ -338,7 +370,7 @@ public class GuiIngame extends Gui
+         {
+             this.mc.mcProfiler.startSection("expLevel");
+             var37 = false;
+-            var11 = var37 ? 16777215 : 8453920;
++            health = var37 ? 16777215 : 8453920;
+             var41 = "" + this.mc.thePlayer.experienceLevel;
+             var39 = (var6 - var8.getStringWidth(var41)) / 2;
+             var40 = var7 - 31 - 4;
+@@ -346,7 +378,7 @@ public class GuiIngame extends Gui
+             var8.drawString(var41, var39 - 1, var40, 0);
+             var8.drawString(var41, var39, var40 + 1, 0);
+             var8.drawString(var41, var39, var40 - 1, 0);
+-            var8.drawString(var41, var39, var40, var11);
++            var8.drawString(var41, var39, var40, health);
+             this.mc.mcProfiler.endSection();
+         }
+ 
+@@ -357,7 +389,7 @@ public class GuiIngame extends Gui
+             if (this.remainingHighlightTicks > 0 && this.highlightingItemStack != null)
+             {
+                 var41 = this.highlightingItemStack.getDisplayName();
+-                var11 = (var6 - var8.getStringWidth(var41)) / 2;
++                health = (var6 - var8.getStringWidth(var41)) / 2;
+                 var12 = var7 - 59;
+ 
+                 if (!this.mc.playerController.shouldDrawHUD())
+@@ -377,7 +409,7 @@ public class GuiIngame extends Gui
+                     GL11.glPushMatrix();
+                     GL11.glEnable(GL11.GL_BLEND);
+                     GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+-                    var8.drawStringWithShadow(var41, var11, var12, 16777215 + (var39 << 24));
++                    var8.drawStringWithShadow(var41, health, var12, 16777215 + (var39 << 24));
+                     GL11.glDisable(GL11.GL_BLEND);
+                     GL11.glPopMatrix();
+                 }
+@@ -400,8 +432,8 @@ public class GuiIngame extends Gui
+                 var41 = String.format(StatCollector.translateToLocal("demo.remainingTime"), new Object[] {StringUtils.ticksToElapsedTime((int)(120500L - this.mc.theWorld.getTotalWorldTime()))});
+             }
+ 
+-            var11 = var8.getStringWidth(var41);
+-            var8.drawStringWithShadow(var41, var6 - var11 - 10, 5, 16777215);
++            health = var8.getStringWidth(var41);
++            var8.drawStringWithShadow(var41, var6 - health - 10, 5, 16777215);
+             this.mc.mcProfiler.endSection();
+         }
+ 
+@@ -433,14 +465,14 @@ public class GuiIngame extends Gui
+         {
+             this.mc.mcProfiler.startSection("overlayMessage");
+             var38 = (float)this.recordPlayingUpFor - par1;
+-            var11 = (int)(var38 * 256.0F / 20.0F);
++            health = (int)(var38 * 256.0F / 20.0F);
+ 
+-            if (var11 > 255)
++            if (health > 255)
+             {
+-                var11 = 255;
++                health = 255;
+             }
+ 
+-            if (var11 > 0)
++            if (health > 0)
+             {
+                 GL11.glPushMatrix();
+                 GL11.glTranslatef((float)(var6 / 2), (float)(var7 - 48), 0.0F);
+@@ -453,7 +485,7 @@ public class GuiIngame extends Gui
+                     var12 = Color.HSBtoRGB(var38 / 50.0F, 0.7F, 0.6F) & 16777215;
+                 }
+ 
+-                var8.drawString(this.recordPlaying, -var8.getStringWidth(this.recordPlaying) / 2, -4, var12 + (var11 << 24));
++                var8.drawString(this.recordPlaying, -var8.getStringWidth(this.recordPlaying) / 2, -4, var12 + (health << 24));
+                 GL11.glDisable(GL11.GL_BLEND);
+                 GL11.glPopMatrix();
+             }
+@@ -1285,6 +1317,71 @@ public class GuiIngame extends Gui
+                 }
+             }
+         }
++        
++        
++        //COPY
++        for (int i_20 = 10; i_20 < 20; ++i_20)
++        {
++            int var10 = var2;
++            int var11 = 16;
++            byte var12 = 0;
++
++            if (this.mc.thePlayer.isPotionActive(Potion.hunger))
++            {
++                var11 += 36;
++                var12 = 13;
++            }
++            else if (i_20 < var7 >> 3)
++            {
++                var12 = 1;
++            }
++
++            int var13;
++
++            if (var4 > 0 && this.updateCounter % (var5 * 5 + 1) == 0)
++            {
++                var10 = var2 + (this.rand.nextInt(3) - 1);
++            }
++            else if (this.m_iFoodOverlayShakeCounter > 0)
++            {
++                var13 = 1;
++
++                if (this.rand.nextInt(2) == 0)
++                {
++                    var13 = -var13;
++                }
++
++                var10 = var2 + var13;
++            }
++            var10 -= 10;
++            var13 = var1 - (i_20-10) * 8 - 9;
++            this.drawTexturedModalRect(var13, var10, 16 + var12 * 9, 27, 9, 9);
++            int var14;
++
++            if (i_20 == var7 >> 3 && !this.mc.thePlayer.isPotionActive(Potion.hunger))
++            {
++                var14 = var7 % 8;
++
++                if (var14 != 0)
++                {
++                    this.drawTexturedModalRect(var13 + 8 - var14, var10, 33 - var14, 27, 1 + var14, 9);
++                }
++            }
++
++            if (i_20 < var8)
++            {
++                this.drawTexturedModalRect(var13, var10, var11 + 36, 27, 9, 9);
++            }
++            else if (i_20 == var8)
++            {
++                var14 = var5 % 6;
++
++                if (var14 != 0)
++                {
++                    this.drawTexturedModalRect(var13 + 7 - var14, var10, var11 + 36 + 7 - var14, 27, 3 + var14, 9);
++                }
++            }
++        }
+     }
+ 
+     private boolean DrawPenaltyText(int var1, int var2)
+diff --git a/minecraft/net/minecraft/src/ItemFishingRod.java b/minecraft/net/minecraft/src/ItemFishingRod.java
+index 2d2ddcb..e9a2e07 100644
+--- a/minecraft/net/minecraft/src/ItemFishingRod.java
++++ b/minecraft/net/minecraft/src/ItemFishingRod.java
+@@ -3,6 +3,8 @@ package net.minecraft.src;
+ public class ItemFishingRod extends Item
+ {
+     private Icon theIcon;
++    
++    private static YYBaitMod mod = new YYBaitMod();
+ 
+     public ItemFishingRod(int par1)
+     {
+@@ -42,18 +44,42 @@ public class ItemFishingRod extends Item
+         }
+         else
+         {
+-            par2World.playSoundAtEntity(par3EntityPlayer, "random.bow", 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
+-
+-            if (!par2World.isRemote)
++            boolean appliedBait = false;
++            
++            for(int i = 0; i<9; i++)
+             {
+-                par2World.spawnEntityInWorld(new EntityFishHook(par2World, par3EntityPlayer));
++            	ItemStack check = par3EntityPlayer.inventory.getStackInSlot(i);
++            	if(check != null && check.itemID == YYBaitMod.yyItemBait.itemID)
++            	{
++            		par2World.playSoundAtEntity(par3EntityPlayer, "mob.slime.attack", 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
++            		par3EntityPlayer.inventory.consumeInventoryItem(check.itemID);
++            		ItemStack update = par3EntityPlayer.getCurrentEquippedItem().copy();
++            		update.itemID = FCBetterThanWolves.fcItemFishingRodBaited.itemID;
++            		par3EntityPlayer.inventory.setInventorySlotContents(par3EntityPlayer.inventory.currentItem, update);
++            		appliedBait = true;
++            		break;
++            	}
++            	
++            	
+             }
++            
++            if(!appliedBait)
++            {
++            	par2World.playSoundAtEntity(par3EntityPlayer, "random.bow", 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
++            	if (!par2World.isRemote)
++                {
++                    par2World.spawnEntityInWorld(new EntityFishHook(par2World, par3EntityPlayer));
++                }
+ 
+-            par3EntityPlayer.swingItem();
++                par3EntityPlayer.swingItem();
++            }
++
++            
+         }
+ 
+         return par1ItemStack;
+     }
++    
+ 
+     public void registerIcons(IconRegister par1IconRegister)
+     {
+diff --git a/minecraft/net/minecraft/src/ItemMap.java b/minecraft/net/minecraft/src/ItemMap.java
+index 33db091..da3080e 100644
+--- a/minecraft/net/minecraft/src/ItemMap.java
++++ b/minecraft/net/minecraft/src/ItemMap.java
+@@ -273,7 +273,20 @@ public class ItemMap extends ItemMapBase
+                 var6.updateVisiblePlayers(var3, var1);
+             }
+ 
+-            if (var5)
++            InventoryPlayer inventory = var3.inventory;
++            int slot = inventory.currentItem;
++            ItemStack nextStack = inventory.getStackInSlot((slot+1)%9);
++            ItemStack prevStack = inventory.getStackInSlot((slot+8)%9);
++            boolean o =
++            		var3.ridingEntity instanceof EntityBoat &&
++            		inventory.getCurrentItem() != null &&
++            		inventory.getCurrentItem().itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID &&
++            		(
++            				(nextStack != null && this.itemID == nextStack.itemID) ||
++            				(prevStack != null && this.itemID == prevStack.itemID)
++            				);
++            
++            if (var5 || o)
+             {
+                 this.updateMapData(var2, var3, var6);
+             }
+diff --git a/minecraft/net/minecraft/src/TileEntityRenderer.java b/minecraft/net/minecraft/src/TileEntityRenderer.java
+index b610c1a..38bb9b4 100644
+--- a/minecraft/net/minecraft/src/TileEntityRenderer.java
++++ b/minecraft/net/minecraft/src/TileEntityRenderer.java
+@@ -61,6 +61,7 @@ public class TileEntityRenderer
+         this.specialRendererMap.put(FCTileEntityToolPlaced.class, new FCTileEntityToolPlacedRenderer());
+         this.specialRendererMap.put(FCTileEntityBasketWicker.class, new FCTileEntityBasketWickerRenderer());
+         this.specialRendererMap.put(FCTileEntityHamper.class, new FCTileEntityBasketRenderer());
++        this.specialRendererMap.put(YYTileEntityLargeBasket.class, new FCTileEntityBasketRenderer());
+         Iterator var1 = this.specialRendererMap.values().iterator();
+ 
+         while (var1.hasNext())
+diff --git a/minecraft_server/net/minecraft/src/ContainerWorkbench.java b/minecraft_server/net/minecraft/src/ContainerWorkbench.java
+index da461af..1cf6099 100644
+--- a/minecraft_server/net/minecraft/src/ContainerWorkbench.java
++++ b/minecraft_server/net/minecraft/src/ContainerWorkbench.java
+@@ -10,6 +10,8 @@ public class ContainerWorkbench extends Container
+     private int posY;
+     private int posZ;
+ 
++    private static boolean isWood = false;
++
+     public ContainerWorkbench(InventoryPlayer par1InventoryPlayer, World par2World, int par3, int par4, int par5)
+     {
+         this.worldObj = par2World;
+@@ -49,7 +51,22 @@ public class ContainerWorkbench extends Container
+      */
+     public void onCraftMatrixChanged(IInventory par1IInventory)
+     {
+-        this.craftResult.setInventorySlotContents(0, CraftingManager.getInstance().findMatchingRecipe(this.craftMatrix, this.worldObj));
++    	if (worldObj.getBlockId(posX, posY, posZ) == 1030)
++    	{
++    		isWood = true;
++    	}
++    	if (worldObj.getBlockId(posX, posY, posZ) == Block.anvil.blockID)
++    	{
++    		isWood = false;
++    	}
++    	ItemStack result = CraftingManager.getInstance().findMatchingRecipe(craftMatrix, worldObj);
++    	boolean denied =
++    			isWood &&
++    			result != null &&
++    			result.itemID == Item.pickaxeIron.itemID;
++    	
++    	if(!denied)
++    		this.craftResult.setInventorySlotContents(0, CraftingManager.getInstance().findMatchingRecipe(this.craftMatrix, this.worldObj));
+     }
+ 
+     /**
+diff --git a/minecraft_server/net/minecraft/src/EntityCreature.java b/minecraft_server/net/minecraft/src/EntityCreature.java
+index 30f08c8..5cd34c0 100644
+--- a/minecraft_server/net/minecraft/src/EntityCreature.java
++++ b/minecraft_server/net/minecraft/src/EntityCreature.java
+@@ -45,7 +45,7 @@ public abstract class EntityCreature extends EntityLiving
+         }
+ 
+         this.hasAttacked = this.isMovementCeased();
+-        float var1 = 16.0F;
++        float var1 = 32.0F;
+ 
+         if (this.entityToAttack == null)
+         {
+diff --git a/minecraft_server/net/minecraft/src/EntityCreeper.java b/minecraft_server/net/minecraft/src/EntityCreeper.java
+index f01a1f4..27df943 100644
+--- a/minecraft_server/net/minecraft/src/EntityCreeper.java
++++ b/minecraft_server/net/minecraft/src/EntityCreeper.java
+@@ -138,11 +138,11 @@ public class EntityCreeper extends EntityMob
+ 
+                     if (this.getPowered())
+                     {
+-                        this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, (float)(this.explosionRadius * 2), var2);
++                        this.worldObj.newExplosion(this, this.posX, this.posY, this.posZ, (float)(this.explosionRadius * 2), true, var2);
+                     }
+                     else
+                     {
+-                        this.worldObj.createExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, var2);
++                        this.worldObj.newExplosion(this, this.posX, this.posY, this.posZ, (float)this.explosionRadius, true, var2);
+                     }
+ 
+                     this.setDead();
+diff --git a/minecraft_server/net/minecraft/src/EntityFishHook.java b/minecraft_server/net/minecraft/src/EntityFishHook.java
+index 64890e7..dbbdb5a 100644
+--- a/minecraft_server/net/minecraft/src/EntityFishHook.java
++++ b/minecraft_server/net/minecraft/src/EntityFishHook.java
+@@ -476,7 +476,7 @@ public class EntityFishHook extends Entity
+ 
+         for (int var4 = var1 - 2; var4 <= var1 + 2; ++var4)
+         {
+-            for (int var5 = var2 - 2; var5 <= var2; ++var5)
++            for (int var5 = var2 - 1; var5 <= var2; ++var5)
+             {
+                 for (int var6 = var3 - 2; var6 <= var3 + 2; ++var6)
+                 {
+@@ -512,7 +512,7 @@ public class EntityFishHook extends Entity
+ 
+                     if (this.worldObj.IsPrecipitatingAtPos(MathHelper.floor_double(this.posX), MathHelper.floor_double(this.posZ)))
+                     {
+-                        var1 /= 2;
++                        var1 /= 20;
+                     }
+                 }
+             }
+@@ -525,7 +525,7 @@ public class EntityFishHook extends Entity
+ 
+                 if (this.worldObj.IsPrecipitatingAtPos(MathHelper.floor_double(this.posX), MathHelper.floor_double(this.posZ)))
+                 {
+-                    var1 /= 2;
++                    var1 /= 6;
+                 }
+             }
+ 
+diff --git a/minecraft_server/net/minecraft/src/EntityItem.java b/minecraft_server/net/minecraft/src/EntityItem.java
+index 8310629..8446557 100644
+--- a/minecraft_server/net/minecraft/src/EntityItem.java
++++ b/minecraft_server/net/minecraft/src/EntityItem.java
+@@ -695,7 +695,7 @@ public class EntityItem extends Entity
+ 
+     public void SetEntityItemAsDroppedOnPlayerDeath(EntityPlayer var1)
+     {
+-        this.m_lAbsoluteItemDespawnTime = MinecraftServer.getServer().worldServers[0].getTotalWorldTime() + 24000L;
++        this.m_lAbsoluteItemDespawnTime = MinecraftServer.getServer().worldServers[0].getTotalWorldTime() + 144000000L;
+     }
+ 
+     public static boolean InstallationIntegrityTestEntityItem()
+diff --git a/minecraft_server/net/minecraft/src/EntityPlayer.java b/minecraft_server/net/minecraft/src/EntityPlayer.java
+index 732e0e0..8ab1a4c 100644
+--- a/minecraft_server/net/minecraft/src/EntityPlayer.java
++++ b/minecraft_server/net/minecraft/src/EntityPlayer.java
+@@ -6,6 +6,7 @@ import java.util.List;
+ 
+ public abstract class EntityPlayer extends EntityLiving implements ICommandSender
+ {
++	public static final int YY_EXTRA_HEALTH = 20;
+     /** Inventory of the player */
+     public InventoryPlayer inventory = new InventoryPlayer(this);
+     private InventoryEnderChest theInventoryEnderChest = new InventoryEnderChest();
+@@ -137,7 +138,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 
+     public int getMaxHealth()
+     {
+-        return 20;
++    	return 20+YY_EXTRA_HEALTH;
+     }
+ 
+     protected void entityInit()
+@@ -2120,12 +2121,12 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 
+     public boolean CanJump()
+     {
+-        return this.health > 4 && this.foodStats.getFoodLevel() > 12 && (int)this.foodStats.getSaturationLevel() < 18;
++    	return this.GetHealthPenaltyLevel() <= 3 && this.GetHungerPenaltyLevel() <= 2 && this.GetFatPenaltyLevel() <= 3;
+     }
+ 
+     public boolean CanSwim()
+     {
+-        return !this.isWeighted() && this.health > 4;
++        return !this.isWeighted() && this.GetHealthPenaltyLevel() <= 3;
+     }
+ 
+     protected int GetWornArmorWeight()
+@@ -2314,7 +2315,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 
+     public boolean HasStatusPenalty()
+     {
+-        return this.getHealth() <= 10 || this.foodStats.getFoodLevel() <= 24 || (int)this.foodStats.getSaturationLevel() >= 12;
++    	return this.GetHealthPenaltyLevel() > 0 || this.GetHungerPenaltyLevel() > 0 || this.GetFatPenaltyLevel() > 0;
+     }
+ 
+     public int GetMaximumStatusPenaltyLevel()
+@@ -2775,7 +2776,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+     protected boolean IsPlayerHoldingSail()
+     {
+         ItemStack var1 = this.inventory.mainInventory[this.inventory.currentItem];
+-        return var1 != null ? var1.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID : false;
++        int slot = inventory.currentItem;
++        ItemStack nextStack = inventory.getStackInSlot((slot+1)%9);
++        ItemStack prevStack = inventory.getStackInSlot((slot+8)%9);
++        boolean o = inventory.getCurrentItem() != null &&
++        		inventory.getCurrentItem().itemID == Item.map.itemID &&
++        		(
++        				(nextStack != null && nextStack.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID) ||
++        				(prevStack != null && prevStack.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID)
++        				);
++        return (var1 != null ? var1.itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID : false) || o;
+     }
+ 
+     public boolean AppliesConstantForceWhenRidingBoat()
+diff --git a/minecraft_server/net/minecraft/src/EntityPlayerMP.java b/minecraft_server/net/minecraft/src/EntityPlayerMP.java
+index 45461e2..399cd51 100644
+--- a/minecraft_server/net/minecraft/src/EntityPlayerMP.java
++++ b/minecraft_server/net/minecraft/src/EntityPlayerMP.java
+@@ -1122,19 +1122,19 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+         int var1 = (int)this.foodStats.getSaturationLevel();
+         byte var2 = 4;
+ 
+-        if (var1 < 12)
++        if (var1 < 26)
+         {
+             var2 = 0;
+         }
+-        else if (var1 < 14)
++        else if (var1 < 29)
+         {
+             var2 = 1;
+         }
+-        else if (var1 < 16)
++        else if (var1 < 32)
+         {
+             var2 = 2;
+         }
+-        else if (var1 < 18)
++        else if (var1 < 36)
+         {
+             var2 = 3;
+         }
+@@ -1147,19 +1147,19 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+         int var1 = this.foodStats.getFoodLevel();
+         byte var2 = 5;
+ 
+-        if (var1 > 24)
++        if (var1 > 36)
+         {
+             var2 = 0;
+         }
+-        else if (var1 > 18)
++        else if (var1 > 27)
+         {
+             var2 = 1;
+         }
+-        else if (var1 > 12)
++        else if (var1 > 18)
+         {
+             var2 = 2;
+         }
+-        else if (var1 > 6)
++        else if (var1 > 9)
+         {
+             var2 = 3;
+         }
+@@ -1176,30 +1176,30 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+         int var1 = this.getHealth();
+         byte var2 = 5;
+ 
+-        if (var1 > 10)
++        if (var1 > 15)
+         {
+             var2 = 0;
+         }
+-        else if (var1 > 8)
++        else if (var1 > 12)
+         {
+             var2 = 1;
+         }
+-        else if (var1 > 6)
++        else if (var1 > 9)
+         {
+             var2 = 2;
+         }
+-        else if (var1 > 4)
++        else if (var1 > 6)
+         {
+             var2 = 3;
+         }
+-        else if (var1 > 2)
++        else if (var1 > 3)
+         {
+             var2 = 4;
+         }
+ 
+         this.SetHealthPenaltyLevel(var2);
+     }
+-
++    
+     private boolean IsInGloom()
+     {
+         if (!this.capabilities.disableDamage && !this.isPotionActive(Potion.nightVision) && this.worldObj.provider.dimensionId == 0)
+diff --git a/minecraft_server/net/minecraft/src/FoodStats.java b/minecraft_server/net/minecraft/src/FoodStats.java
+index 9848aa6..580f5ca 100644
+--- a/minecraft_server/net/minecraft/src/FoodStats.java
++++ b/minecraft_server/net/minecraft/src/FoodStats.java
+@@ -2,8 +2,9 @@ package net.minecraft.src;
+ 
+ public class FoodStats
+ {
++	private int YY_FOOD = 120;
+     /** The player's food level. */
+-    private int foodLevel = 60;
++    private int foodLevel = YY_FOOD;
+ 
+     /** The player's food saturation. */
+     private float foodSaturationLevel = 0.0F;
+@@ -13,7 +14,7 @@ public class FoodStats
+ 
+     /** The player's food timer value. */
+     private int foodTimer = 0;
+-    private int prevFoodLevel = 60;
++    private int prevFoodLevel = YY_FOOD;
+ 
+     /**
+      * Eat some food.
+@@ -41,14 +42,14 @@ public class FoodStats
+                 this.foodSaturationLevel = 0.0F;
+             }
+ 
+-            if (this.foodLevel > 60 || this.foodLevel < 0)
++            if (this.foodLevel > YY_FOOD || this.foodLevel < 0)
+             {
+-                this.foodLevel = 60;
++                this.foodLevel = YY_FOOD;
+             }
+ 
+-            if (this.foodSaturationLevel > 20.0F || this.foodSaturationLevel < 0.0F)
++            if (this.foodSaturationLevel > 40.0F || this.foodSaturationLevel < 0.0F)
+             {
+-                this.foodSaturationLevel = 20.0F;
++                this.foodSaturationLevel = 40.0F;
+             }
+         }
+     }
+@@ -78,7 +79,7 @@ public class FoodStats
+      */
+     public boolean needFood()
+     {
+-        return this.foodLevel < 60;
++        return this.foodLevel < YY_FOOD;
+     }
+ 
+     /**
+@@ -113,12 +114,12 @@ public class FoodStats
+     public void addStats(int par1, float par2)
+     {
+         int var3 = this.foodLevel;
+-        this.foodLevel = Math.min(par1 + this.foodLevel, 60);
++        this.foodLevel = Math.min(par1 + this.foodLevel, YY_FOOD);
+         int var4 = par1 - (this.foodLevel - var3);
+ 
+         if (var4 > 0)
+         {
+-            this.foodSaturationLevel = Math.min(this.foodSaturationLevel + (float)var4 * par2 / 3.0F, 20.0F);
++            this.foodSaturationLevel = Math.min(this.foodSaturationLevel + (float)var4 * par2 / 3.0F, 40.0F);
+         }
+     }
+ 
+@@ -149,11 +150,11 @@ public class FoodStats
+             this.foodExhaustionLevel = 0.0F;
+         }
+ 
+-        if (this.foodLevel > 24 && par1EntityPlayer.shouldHeal())
++        if (par1EntityPlayer.GetHungerPenaltyLevel() == 0 && par1EntityPlayer.shouldHeal())
+         {
+             ++this.foodTimer;
+ 
+-            if (this.foodTimer >= 600)
++            if (this.foodTimer >= 6000)
+             {
+                 par1EntityPlayer.heal(1);
+                 this.foodTimer = 0;
+diff --git a/minecraft_server/net/minecraft/src/ItemFishingRod.java b/minecraft_server/net/minecraft/src/ItemFishingRod.java
+index 00e723a..13dc318 100644
+--- a/minecraft_server/net/minecraft/src/ItemFishingRod.java
++++ b/minecraft_server/net/minecraft/src/ItemFishingRod.java
+@@ -2,6 +2,8 @@ package net.minecraft.src;
+ 
+ public class ItemFishingRod extends Item
+ {
++	private static YYBaitMod mod = new YYBaitMod();
++	
+     public ItemFishingRod(int par1)
+     {
+         super(par1);
+@@ -23,16 +25,40 @@ public class ItemFishingRod extends Item
+         }
+         else
+         {
+-            par2World.playSoundAtEntity(par3EntityPlayer, "random.bow", 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
+-
+-            if (!par2World.isRemote)
++            boolean appliedBait = false;
++            
++            for(int i = 0; i<9; i++)
+             {
+-                par2World.spawnEntityInWorld(new EntityFishHook(par2World, par3EntityPlayer));
++            	ItemStack check = par3EntityPlayer.inventory.getStackInSlot(i);
++            	if(check != null && check.itemID == YYBaitMod.yyItemBait.itemID)
++            	{
++            		par2World.playSoundAtEntity(par3EntityPlayer, "mob.slime.attack", 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
++            		par3EntityPlayer.inventory.consumeInventoryItem(check.itemID);
++            		ItemStack update = par3EntityPlayer.getCurrentEquippedItem().copy();
++            		update.itemID = FCBetterThanWolves.fcItemFishingRodBaited.itemID;
++            		par3EntityPlayer.inventory.setInventorySlotContents(par3EntityPlayer.inventory.currentItem, update);
++            		appliedBait = true;
++            		break;
++            	}
++            	
++            	
+             }
++            
++            if(!appliedBait)
++            {
++            	par2World.playSoundAtEntity(par3EntityPlayer, "random.bow", 0.5F, 0.4F / (itemRand.nextFloat() * 0.4F + 0.8F));
++            	if (!par2World.isRemote)
++                {
++                    par2World.spawnEntityInWorld(new EntityFishHook(par2World, par3EntityPlayer));
++                }
+ 
+-            par3EntityPlayer.swingItem();
++                par3EntityPlayer.swingItem();
++            }
++
++            
+         }
+ 
+         return par1ItemStack;
+     }
++    
+ }
+diff --git a/minecraft_server/net/minecraft/src/ItemMap.java b/minecraft_server/net/minecraft/src/ItemMap.java
+index dcc2220..7a64c86 100644
+--- a/minecraft_server/net/minecraft/src/ItemMap.java
++++ b/minecraft_server/net/minecraft/src/ItemMap.java
+@@ -257,7 +257,20 @@ public class ItemMap extends ItemMapBase
+                 var6.updateVisiblePlayers(var3, var1);
+             }
+ 
+-            if (var5)
++            InventoryPlayer inventory = var3.inventory;
++            int slot = inventory.currentItem;
++            ItemStack nextStack = inventory.getStackInSlot((slot+1)%9);
++            ItemStack prevStack = inventory.getStackInSlot((slot+8)%9);
++            boolean o =
++            		var3.ridingEntity instanceof EntityBoat &&
++            		inventory.getCurrentItem() != null &&
++            		inventory.getCurrentItem().itemID == FCBetterThanWolves.fcItemWindMillBlade.itemID &&
++            		(
++            				(nextStack != null && this.itemID == nextStack.itemID) ||
++            				(prevStack != null && this.itemID == prevStack.itemID)
++            				);
++            
++            if (var5 || o)
+             {
+                 this.updateMapData(var2, var3, var6);
+             }

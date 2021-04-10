@@ -1,0 +1,20 @@
+item.yyItemBait.name=Bait
+item.yyItemBaitMix.name=Bait Mix
+item.yyItemBarkStitching.name=Bark Stitching
+item.yyItemStitchedBark.name=Stitched Bark
+
+tile.fcBlockBasketWicker.name=Bark Box
+tile.fcBlockHamper.name=Wicker Basket
+container.fcHamper=Wicker Basket
+
+container.yyLargeBasket=Hamper
+tile.yyBlockLargeBasket.name=Hamper
+
+tile.yyBlockTorchLongTermIdle.name=Unlit Sparkling Torch
+tile.yyBlockTorchLongTermBurning.name=Burning Sparkling Torch
+
+item.yyItemBrickHempWet.name=Wet Hemp Brick
+tile.yyBlockBrickHempWet.name=Wet Hemp Brick
+item.yyItemBrickHempDry.name=Dry Hemp Brick
+tile.yyBlockBrickHempDry.name=Dry Hemp Brick
+item.yyItemBrokenBrick.name=Broken Brick

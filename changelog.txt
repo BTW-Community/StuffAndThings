@@ -1,0 +1,35 @@
+Version 1.0.0 - 2021-04-10
+
+- Doubled the player maximum health.
+- Increased time of passive health regeneration 10x.
+- Doubled the player maximum food.
+- Spaced out health and food based penalties to reflect the above.
+- Reduced the number of bowls that can be crafted with Planks to 1, instead of previous 4. The high efficiency recipe using sidings remains unchanged.
+- Added the new Bait item, which can be applied to the fishing rod without crafting, with the method you might know from the Click Bait Addon. 2 pieces of Bait can be made by mixing Rotten Flesh and Bone Meal in a bowl.
+- Changed the Kibble recipe to require unstoked fire under the Cauldron instead of stoked fire previously.
+- Added a recipe to convert Kibble to 6 pieces of Bait.
+- Increased the fishing bonus of rain to be closer to that of the full moon, but slightly weaker.
+- Changed fishing to only require 3 blocks of water depth, instead of the previous 4.
+- Increased the range from which spiders notice players.
+- Changed the top block of Hemp crops to always drop a seed.
+- Changed Hardcore Trim so that it leaves the farmland below the plant.
+- Changed Brick Ovens to drop a new Broken Brick item. 2 of these can be tied together with 7 Hemp Fibers in a H shape. After spending some time in the rain, and then in the sun, these will turn back to normal bricks.
+- Replaced the Wicker Basket with the Bark Box. You can stitch 3 pieces of bark together with a String or Hemp Fibers, and craft a wicker box from 2 of these components.
+- Renamed the Hamper to Wicker Basket, and removed the Wooden Plank from the center slot of the crafting recipe.
+- Changed the Wicker Basket lossy conversion recipe to work on the new Wicker Basket.
+- Added a new storage block with a storage capacity of 12 slots, which is now called the Hamper. It can be crafted with wicker on top and in center, siding on the botom center, and moulding in the remaining 4 slots on the sides.
+- Added an Iron Ingot to the center slot of the Chest crafting recipe.
+- Added a Chest to the top center slot of the Hopper crafting recipe.
+- Added the ability to melt Chests and Hoppers in the Crucible to recover Iron Nuggets.
+- Removed light emitted by redstone torches and blocks.
+- Removed the Iron Chisel's ability to mine Redstone and Diamond.
+- Removed the ability to craft Iron Pickaxes on Work Stumps, they now require an Anvil.
+- Added the new Sparkling Torch. It is crafted with Redstone and a Crude Torch, and lasts 10x the time Crude Torch does.
+- Changed creepers to set things on fire when they explode.
+- Changed burning creepers to explode.
+- Added Hellfire Dust as a rare drop for creepers.
+- Changed items dropped by players on death to stay for 200 hours instead of 20 minutes. (2000 hours on servers)
+- Changed the Compass to be crafted with 4 Iron Ingots and a Soul Urn.
+- Removed the player locating capabilities of Soul Sand.
+- Changed Hardcore Soul Mating to not be disabled by game progression.
+- Included the functionality of the Boat Mapping Addon
