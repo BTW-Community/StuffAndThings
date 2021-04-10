@@ -1,5 +1,5 @@
 # Yany's Stuff & Things Addon
-Are you literally me? Then this addon might just be the thing for you. It changes BTW - especially the early game - to make it more interesting for my own preferred play style. You can find out more in the changelog in the repo, or in the associated thread on the BTW forums.
+Are you literally me? Then this addon might just be the thing for you. It changes BTW - especially the early game - to make it more interesting for my own preferred play style. You can find out more in the changelog in the repo, or in the associated thread on the BTW forums [here](https://sargunster.com/btwforum/viewtopic.php?f=12&t=9873).
 
 # Installation
 You can install the addon to your Better Than Wolves instance by adding the contents of the released zip to your minecraft.jar, the same way you installed Better Than Wolves.
@@ -28,6 +28,7 @@ ItemMap.java
 Client only:
 ```
 GuiIngame.java
+TileEntityRenderer.java
 ```
 
 # Copyright info

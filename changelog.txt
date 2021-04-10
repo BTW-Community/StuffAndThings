@@ -14,10 +14,10 @@ Version 1.0.0 - 2021-04-10
 - Changed the top block of Hemp crops to always drop a seed.
 - Changed Hardcore Trim so that it leaves the farmland below the plant.
 - Changed Brick Ovens to drop a new Broken Brick item. 2 of these can be tied together with 7 Hemp Fibers in a H shape. After spending some time in the rain, and then in the sun, these will turn back to normal bricks.
-- Replaced the Wicker Basket with the Bark Box. You can stitch 3 pieces of bark together with a String or Hemp Fibers, and craft a wicker box from 2 of these components.
+- Replaced the Wicker Basket with the Bark Box. You can stitch 3 pieces of bark together with a String or Hemp Fibers, and craft a Bark Box from 2 of these components.
 - Renamed the Hamper to Wicker Basket, and removed the Wooden Plank from the center slot of the crafting recipe.
 - Changed the Wicker Basket lossy conversion recipe to work on the new Wicker Basket.
-- Added a new storage block with a storage capacity of 12 slots, which is now called the Hamper. It can be crafted with wicker on top and in center, siding on the botom center, and moulding in the remaining 4 slots on the sides.
+- Added a new storage block with a storage capacity of 12 slots, which is now called the Hamper. It can be crafted with wicker on top and in center, siding on the bottom center, and moulding in the remaining 4 slots on the sides.
 - Added an Iron Ingot to the center slot of the Chest crafting recipe.
 - Added a Chest to the top center slot of the Hopper crafting recipe.
 - Added the ability to melt Chests and Hoppers in the Crucible to recover Iron Nuggets.
