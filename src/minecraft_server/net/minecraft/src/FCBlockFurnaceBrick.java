@@ -1,255 +1,286 @@
+// FCMOD
+
+// FCMOD
+
 package net.minecraft.src;
 
 import java.util.Random;
 
 public class FCBlockFurnaceBrick extends FCBlockFurnace
 {
-    protected final FCModelBlock m_modelBlockInterior = new FCModelBlockFurnaceBrick();
-    protected final float m_fClickYTopPortion = 0.375F;
-    protected final float m_fClickYBottomPortion = 0.375F;
+	protected final FCModelBlock m_modelBlockInterior = new FCModelBlockFurnaceBrick();
+	
+	protected final float m_fClickYTopPortion = ( 6F / 16F ); 
+	protected final float m_fClickYBottomPortion = ( 6F / 16F ); 
+		
+	protected FCBlockFurnaceBrick( int iBlockID, boolean bIsLit )
+	{
+		super( iBlockID, bIsLit );
+		
+		SetPicksEffectiveOn();
+		
+		setHardness( 2F );
+		setResistance( 3.33F ); // need to override resistance set in parent
+		
+		setUnlocalizedName( "fcBlockFurnaceBrick" );        
+	}
+	
+	@Override
+	public TileEntity createNewTileEntity( World world )
+	{
+		return new FCTileEntityFurnaceBrick();
+	}
 
-    protected FCBlockFurnaceBrick(int var1, boolean var2)
-    {
-        super(var1, var2);
-        this.SetPicksEffectiveOn();
-        this.setHardness(2.0F);
-        this.setResistance(3.33F);
-        this.setUnlocalizedName("fcBlockFurnaceBrick");
-    }
+	@Override
+	public boolean onBlockActivated( World world, int i, int j, int k, EntityPlayer player, int iFacing, float fXClick, float fYClick, float fZClick )
+	{
+		int iMetadata = world.getBlockMetadata( i, j, k );
+		int iBlockFacing = iMetadata & 7;
+		
+		if ( iBlockFacing != iFacing )
+		{
+			// block is only accessible from front
+			
+			return false;
+		}
 
-    /**
-     * Returns a new instance of a block's tile entity class. Called on placing the block.
-     */
-    public TileEntity createNewTileEntity(World var1)
-    {
-        return new FCTileEntityFurnaceBrick();
-    }
+		ItemStack heldStack = player.getCurrentEquippedItem();
+		FCTileEntityFurnaceBrick tileEntity = (FCTileEntityFurnaceBrick)world.getBlockTileEntity( i, j, k );        
+		ItemStack cookStack = tileEntity.GetCookStack();        
+		
+		if ( fYClick > m_fClickYTopPortion )
+		{
+			if ( cookStack != null )
+			{
+				tileEntity.GivePlayerCookStack( player, iFacing );
+				
+				return true;
+			}
+			else
+			{
+				if ( heldStack != null && IsValidCookItem( heldStack ) )
+				{
+					if ( !world.isRemote )
+					{
+						tileEntity.AddCookStack( new ItemStack( heldStack.itemID, 1, heldStack.getItemDamage() ) );
+					}
+					
+					heldStack.stackSize--;
+					
+					return true;
+				}
+			}
+		}
+		else if ( fYClick < m_fClickYBottomPortion && heldStack != null )
+		{
+			// handle fuel here
+			
+			Item item = heldStack.getItem();    		
+			int iItemDamage = heldStack.getItemDamage();
+			
+			if ( item.GetCanBeFedDirectlyIntoBrickOven( iItemDamage ) ) 
+			{
+				if ( !world.isRemote )
+				{
+					int iItemsConsumed = tileEntity.AttemptToAddFuel( heldStack );
+					
+					if ( iItemsConsumed > 0 )
+					{
+						if ( isActive )
+						{
+							world.playSoundEffect( (double)i + 0.5D, (double)j + 0.5D, (double)k + 0.5D, 
+								"mob.ghast.fireball", 0.2F + world.rand.nextFloat() * 0.1F, world.rand.nextFloat() * 0.25F + 1.25F );
+						}
+						else
+						{
+							world.playSoundEffect( (double)i + 0.5D, (double)j + 0.5D, (double)k + 0.5D, 
+								"random.pop", 0.25F, ((world.rand.nextFloat() - world.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
+						}
+						
+						heldStack.stackSize -= iItemsConsumed;	        			
+					}
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public int quantityDropped( Random rand )
+	{
+		return 32;
+	}
 
-    /**
-     * Called upon block activation (right click on the block.)
-     */
-    public boolean onBlockActivated(World var1, int var2, int var3, int var4, EntityPlayer var5, int var6, float var7, float var8, float var9)
-    {
-        int var10 = var1.getBlockMetadata(var2, var3, var4);
-        int var11 = var10 & 7;
+	@Override
+	public int idDropped( int iMetaData, Random random, int iFortuneModifier )
+	{
+		return YYStuffAndThings.yyItemBrokenBrick.itemID;
+	}
+	
+	@Override
+	public void OnBlockDestroyedWithImproperTool( World world, EntityPlayer player, int i, int j, int k, int iMetadata )
+	{
+		dropBlockAsItem( world, i, j, k, iMetadata, 0 );
+	}
+	
+	@Override
+	public boolean canPlaceBlockAt( World world, int i, int j, int k )
+	{
+		if ( !FCUtilsWorld.DoesBlockHaveSolidTopSurface( world, i, j - 1, k ) )
+		{
+			return false;
+		}
+		
+		return super.canPlaceBlockAt( world, i, j, k );
+	}
+	
+	@Override
+	public void onNeighborBlockChange( World world, int i, int j, int k, int iBlockID )
+	{    	
+		if ( !FCUtilsWorld.DoesBlockHaveSolidTopSurface( world, i, j - 1, k ) )
+		{
+			dropBlockAsItem( world, i, j, k, world.getBlockMetadata( i, j, k ), 0 );
+			
+			world.setBlockWithNotify( i, j, k, 0 );
+		}
+	}
+	
+	@Override
+	public boolean HasLargeCenterHardPointToFacing( IBlockAccess blockAccess, int i, int j, int k, int iFacing, boolean bIgnoreTransparency )
+	{
+		int iBlockFacing = blockAccess.getBlockMetadata( i, j, k ) & 7;
+		
+		return iBlockFacing != iFacing;
+	}
 
-        if (var11 != var6)
-        {
-            return false;
-        }
-        else
-        {
-            ItemStack var12 = var5.getCurrentEquippedItem();
-            FCTileEntityFurnaceBrick var13 = (FCTileEntityFurnaceBrick)var1.getBlockTileEntity(var2, var3, var4);
-            ItemStack var14 = var13.GetCookStack();
+	@Override
+	public void updateFurnaceBlockState( boolean bBurning, World world, int i, int j, int k, boolean bHasContents )
+	{
+		int iMetadata = world.getBlockMetadata( i, j, k );
+		TileEntity tileEntity = world.getBlockTileEntity( i, j, k );
+		
+		keepFurnaceInventory = true;
 
-            if (var8 > 0.375F)
-            {
-                if (var14 != null)
-                {
-                    var13.GivePlayerCookStack(var5, var6);
-                    return true;
-                }
+		if ( bBurning )
+		{
+			world.setBlock( i, j, k, FCBetterThanWolves.fcBlockFurnaceBrickBurning.blockID );
+		}
+		else
+		{
+			world.setBlock( i, j, k, FCBetterThanWolves.fcBlockFurnaceBrickIdle.blockID );
+		}
 
-                if (var12 != null && this.IsValidCookItem(var12))
-                {
-                    if (!var1.isRemote)
-                    {
-                        var13.AddCookStack(new ItemStack(var12.itemID, 1, var12.getItemDamage()));
-                    }
+		keepFurnaceInventory = false;
+		
+		if ( !bHasContents )
+		{
+			iMetadata = iMetadata & 7;
+		}
+		else
+		{
+			iMetadata = iMetadata | 8;
+		}
+		
+		world.SetBlockMetadataWithNotify( i, j, k, iMetadata, 2 );
 
-                    --var12.stackSize;
-                    return true;
-                }
-            }
-            else if (var8 < 0.375F && var12 != null)
-            {
-                Item var15 = var12.getItem();
-                int var16 = var12.getItemDamage();
+		if ( tileEntity != null )
+		{
+			tileEntity.validate();
+			world.setBlockTileEntity( i, j, k, tileEntity );
+		}
+	}
 
-                if (var15.GetCanBeFedDirectlyIntoBrickOven(var16))
-                {
-                    if (!var1.isRemote)
-                    {
-                        int var17 = var13.AttemptToAddFuel(var12);
+	@Override
+	public boolean GetCanBeSetOnFireDirectly( IBlockAccess blockAccess, int i, int j, int k )
+	{
+		if ( !isActive )
+		{
+			FCTileEntityFurnaceBrick tileEntity = (FCTileEntityFurnaceBrick)blockAccess.getBlockTileEntity( i, j, k );
+			
+			// uses the visual fuel level rather than the actualy fuel level so this will work on the client
+			
+			if ( tileEntity.GetVisualFuelLevel() > 0 )
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public boolean SetOnFireDirectly( World world, int i, int j, int k )
+	{
+		if ( !isActive )
+		{
+			FCTileEntityFurnaceBrick tileEntity = (FCTileEntityFurnaceBrick)world.getBlockTileEntity( i, j, k );
+			
+			if ( tileEntity.AttemptToLight() )
+			{
+				world.playSoundEffect( (double)i + 0.5D, (double)j + 0.5D, (double)k + 0.5D, 
+					"mob.ghast.fireball", 1.0F, world.rand.nextFloat() * 0.4F + 0.8F );
+				
+				return true;
+			}	            
+		}
+		
+		return false;
+	}
+	
+	@Override
+	public int GetChanceOfFireSpreadingDirectlyTo( IBlockAccess blockAccess, int i, int j, int k )
+	{
+		if ( !isActive )
+		{
+			FCTileEntityFurnaceBrick tileEntity = (FCTileEntityFurnaceBrick)blockAccess.getBlockTileEntity( i, j, k );
+			
+			if ( tileEntity.HasValidFuel() )
+			{
+				return 60; // same chance as leaves and other highly flammable objects
+			}
+		}
+		
+		return 0;
+	}
 
-                        if (var17 > 0)
-                        {
-                            if (this.isActive)
-                            {
-                                var1.playSoundEffect((double)var2 + 0.5D, (double)var3 + 0.5D, (double)var4 + 0.5D, "mob.ghast.fireball", 0.2F + var1.rand.nextFloat() * 0.1F, var1.rand.nextFloat() * 0.25F + 1.25F);
-                            }
-                            else
-                            {
-                                var1.playSoundEffect((double)var2 + 0.5D, (double)var3 + 0.5D, (double)var4 + 0.5D, "random.pop", 0.25F, ((var1.rand.nextFloat() - var1.rand.nextFloat()) * 0.7F + 1.0F) * 2.0F);
-                            }
+	@Override
+	public boolean renderAsNormalBlock()
+	{
+		return false;
+	}
+	
+	@Override
+	protected int IDDroppedSilkTouch()
+	{
+		return FCBetterThanWolves.fcBlockFurnaceBrickIdle.blockID;
+	}
+	
+	@Override
+	public boolean GetIsBlockWarm( IBlockAccess blockAccess, int i, int j, int k )
+	{
+		return isActive;
+	}
+	
+	@Override
+	public boolean DoesBlockHopperInsert( World world, int i, int j, int k )
+	{
+		return true;
+	}
+	
+	//------------- Class Specific Methods ------------//
 
-                            var12.stackSize -= var17;
-                        }
-                    }
-
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
-
-    /**
-     * Returns the quantity of items to drop on block destruction.
-     */
-    public int quantityDropped(Random var1)
-    {
-        return 32;
-    }
-
-    /**
-     * Returns the ID of the items to drop on destruction.
-     */
-    public int idDropped(int var1, Random var2, int var3)
-    {
-        return YYBaitMod.yyItemBrokenBrick.itemID;
-    }
-
-    public void OnBlockDestroyedWithImproperTool(World var1, EntityPlayer var2, int var3, int var4, int var5, int var6)
-    {
-        this.dropBlockAsItem(var1, var3, var4, var5, var6, 0);
-    }
-
-    /**
-     * Checks to see if its valid to put this block at the specified coordinates. Args: world, x, y, z
-     */
-    public boolean canPlaceBlockAt(World var1, int var2, int var3, int var4)
-    {
-        return !FCUtilsWorld.DoesBlockHaveSolidTopSurface(var1, var2, var3 - 1, var4) ? false : super.canPlaceBlockAt(var1, var2, var3, var4);
-    }
-
-    /**
-     * Lets the block know when one of its neighbor changes. Doesn't know which neighbor changed (coordinates passed are
-     * their own) Args: x, y, z, neighbor blockID
-     */
-    public void onNeighborBlockChange(World var1, int var2, int var3, int var4, int var5)
-    {
-        if (!FCUtilsWorld.DoesBlockHaveSolidTopSurface(var1, var2, var3 - 1, var4))
-        {
-            this.dropBlockAsItem(var1, var2, var3, var4, var1.getBlockMetadata(var2, var3, var4), 0);
-            var1.setBlockWithNotify(var2, var3, var4, 0);
-        }
-    }
-
-    public boolean HasLargeCenterHardPointToFacing(IBlockAccess var1, int var2, int var3, int var4, int var5, boolean var6)
-    {
-        int var7 = var1.getBlockMetadata(var2, var3, var4) & 7;
-        return var7 != var5;
-    }
-
-    public void updateFurnaceBlockState(boolean var1, World var2, int var3, int var4, int var5, boolean var6)
-    {
-        int var7 = var2.getBlockMetadata(var3, var4, var5);
-        TileEntity var8 = var2.getBlockTileEntity(var3, var4, var5);
-        keepFurnaceInventory = true;
-
-        if (var1)
-        {
-            var2.setBlock(var3, var4, var5, FCBetterThanWolves.fcBlockFurnaceBrickBurning.blockID);
-        }
-        else
-        {
-            var2.setBlock(var3, var4, var5, FCBetterThanWolves.fcBlockFurnaceBrickIdle.blockID);
-        }
-
-        keepFurnaceInventory = false;
-
-        if (!var6)
-        {
-            var7 &= 7;
-        }
-        else
-        {
-            var7 |= 8;
-        }
-
-        var2.SetBlockMetadataWithNotify(var3, var4, var5, var7, 2);
-
-        if (var8 != null)
-        {
-            var8.validate();
-            var2.setBlockTileEntity(var3, var4, var5, var8);
-        }
-    }
-
-    public boolean GetCanBeSetOnFireDirectly(IBlockAccess var1, int var2, int var3, int var4)
-    {
-        if (!this.isActive)
-        {
-            FCTileEntityFurnaceBrick var5 = (FCTileEntityFurnaceBrick)var1.getBlockTileEntity(var2, var3, var4);
-
-            if (var5.GetVisualFuelLevel() > 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean SetOnFireDirectly(World var1, int var2, int var3, int var4)
-    {
-        if (!this.isActive)
-        {
-            FCTileEntityFurnaceBrick var5 = (FCTileEntityFurnaceBrick)var1.getBlockTileEntity(var2, var3, var4);
-
-            if (var5.AttemptToLight())
-            {
-                var1.playSoundEffect((double)var2 + 0.5D, (double)var3 + 0.5D, (double)var4 + 0.5D, "mob.ghast.fireball", 1.0F, var1.rand.nextFloat() * 0.4F + 0.8F);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public int GetChanceOfFireSpreadingDirectlyTo(IBlockAccess var1, int var2, int var3, int var4)
-    {
-        if (!this.isActive)
-        {
-            FCTileEntityFurnaceBrick var5 = (FCTileEntityFurnaceBrick)var1.getBlockTileEntity(var2, var3, var4);
-
-            if (var5.HasValidFuel())
-            {
-                return 60;
-            }
-        }
-
-        return 0;
-    }
-
-    /**
-     * If this block doesn't render as an ordinary block it will return False (examples: signs, buttons, stairs, etc)
-     */
-    public boolean renderAsNormalBlock()
-    {
-        return false;
-    }
-
-    protected int IDDroppedSilkTouch()
-    {
-        return FCBetterThanWolves.fcBlockFurnaceBrickIdle.blockID;
-    }
-
-    public boolean GetIsBlockWarm(IBlockAccess var1, int var2, int var3, int var4)
-    {
-        return this.isActive;
-    }
-
-    public boolean DoesBlockHopperInsert(World var1, int var2, int var3, int var4)
-    {
-        return true;
-    }
-
-    public boolean IsValidCookItem(ItemStack var1)
-    {
-        return FurnaceRecipes.smelting().getSmeltingResult(var1.getItem().itemID) != null;
-    }
+	public boolean IsValidCookItem( ItemStack stack )
+	{
+		if ( FurnaceRecipes.smelting().getSmeltingResult( stack.getItem().itemID ) != null )
+		{
+			return true;
+		}
+		
+		return false;
+	}
+	
+	//----------- Client Side Functionality -----------//
 }

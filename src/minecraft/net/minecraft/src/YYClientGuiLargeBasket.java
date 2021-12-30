@@ -4,35 +4,41 @@ import org.lwjgl.opengl.GL11;
 
 public class YYClientGuiLargeBasket extends GuiContainer
 {
-    private static final int m_iHamperGuiHeight = 149;
-    private IInventory m_hamperInventory;
+	private static final int m_iHamperGuiHeight = 165;
 
-    public YYClientGuiLargeBasket(InventoryPlayer var1, IInventory var2)
-    {
-        super(new YYContainerLargeBasket(var1, var2));
-        this.ySize = 165;
-        this.m_hamperInventory = var2;
-    }
+	private IInventory m_hamperInventory;
 
-    /**
-     * Draw the foreground layer for the GuiContainer (everything in front of the items)
-     */
-    protected void drawGuiContainerForegroundLayer(int var1, int var2)
-    {
-        String var3 = StatCollector.translateToLocal(this.m_hamperInventory.getInvName());
-        this.fontRenderer.drawString(var3, this.xSize / 2 - this.fontRenderer.getStringWidth(var3) / 2, 6, 4210752);
-        this.fontRenderer.drawString(StatCollector.translateToLocal("container.inventory"), 8, 72, 4210752);
-    }
+	public YYClientGuiLargeBasket( InventoryPlayer playerInventory, IInventory hamperInventory )
+	{
+		super( new YYContainerLargeBasket( playerInventory, hamperInventory ) );
+		
+		ySize = m_iHamperGuiHeight;
+		
+		m_hamperInventory = hamperInventory;
+	}
 
-    /**
-     * Draw the background layer for the GuiContainer (everything behind the items)
-     */
-    protected void drawGuiContainerBackgroundLayer(float var1, int var2, int var3)
-    {
-        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.mc.renderEngine.bindTexture("/yytex/yyGuiInv12.png");
-        int var4 = (this.width - this.xSize) / 2;
-        int var5 = (this.height - this.ySize) / 2;
-        this.drawTexturedModalRect(var4, var5, 0, 0, this.xSize, this.ySize);
-    }
+	@Override
+	protected void drawGuiContainerForegroundLayer( int i, int j )
+	{
+		String windowName = StatCollector.translateToLocal( m_hamperInventory.getInvName() );
+		
+		fontRenderer.drawString( windowName, xSize / 2 - fontRenderer.getStringWidth( windowName ) / 2, 6, 0x404040 );
+		
+		fontRenderer.drawString( StatCollector.translateToLocal( "container.inventory" ), 8, ( ySize - 96 ) + 2, 0x404040 );
+	}
+	
+	@Override
+	protected void drawGuiContainerBackgroundLayer( float f, int i, int j )
+	{
+		// draw the background image
+		
+		GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
+		
+		mc.renderEngine.bindTexture("/yytex/yyGuiInv12.png");
+		
+		int xPos = ( width - xSize ) / 2;
+		int yPos = ( height - ySize ) / 2;
+		
+		drawTexturedModalRect( xPos, yPos, 0, 0, xSize, ySize );        
+	} 
 }

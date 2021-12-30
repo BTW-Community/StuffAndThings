@@ -10,11 +10,18 @@ I have not made a lot of effort to keep this compatible with other addons. If an
 
 # Using the source code
 
-The source code released in the repo is based on the decompiled source code of Better Than Wolves. You can find more information about obtaining the decompiled source code [here](https://www.sargunster.com/btw/index.php?title=Creating_Addons). My own files, and the ones that I have changed from Better Than Wolves are included in their entirety. The changes I made to vanilla base classes are available as a git patch that you can apply to the decompiled source code with `git apply --directory=src src.patch`. 
+I haven't tried setting up a working environment based on the source code, but it should generally involve
+
+1. Obtaining the source code of BTW CE 1.3.4
+2. Copying the addon source files in `minecraft` and `minecraft_server`
+3. Applying `src.patch` to the above using git
+4. Putting the contents of the resources wherever MCP expects them to be
+5. Building it all with MCP
+
+If you're interested in building the mod yourself and run into trouble, feel free to contact me (yany) on the BTW forums or the BTW Discord, and I'll try to help.
 
 ## The patch modifies:
 ```
-ContainerWorkbench.java
 EntityCreature.java
 EntityCreeper.java
 EntityFishHook.java
@@ -22,13 +29,11 @@ EntityItem.java
 EntityPlayer.java
 EntityPlayerMP.java
 FoodStats.java
-ItemFishingRod.java
 ItemMap.java
 ```
 Client only:
 ```
 GuiIngame.java
-TileEntityRenderer.java
 ```
 
 # Copyright info

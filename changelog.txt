@@ -1,3 +1,20 @@
+Version 1.0.1 - 2021-12-30
+
+- Updated the addon to BTW CE 1.3.4
+- Reverted the CE change which made trees grow faster and saplings retain their growth state after being broken.
+- Reverted the CE change which made Sails cheaper.
+- Enabled crafting the Stone Hoe. It has 12 uses, and doesn't extract Hemp Seeds from grass.
+- Reverted the change which made destroying Hemp plants to leave farmland behind instead of Loose Dirt.
+- Changed Zombie Pigmen to no longer attack players when they're hit by Ghast fireballs.
+- Removed the ability to throw Soul Sand, so they'll no longer locate fortresses in the nether.
+- Added a config option to remove the fire from creeper explosions.
+- Fixed an issue where the ghost of Iron Pickaxe crafting recipe would still show up in Work Stumps in multiplayer.
+- Changed crafting recipes with Diamond Ingots to also require an Anvil.
+- Fixed an issue where only Oak Bark could be used to make Bark Boxes.
+- Fixed an issue where charged creepers immediately self destructed by making them no longer explode as a result of being set on fire.
+- Added some minor details to addon items, like filtering properties and sound effects.
+
+
 Version 1.0.0 - 2021-04-10
 
 - Doubled the player maximum health.

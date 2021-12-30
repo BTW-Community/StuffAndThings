@@ -1,13 +1,11 @@
 package net.minecraft.src;
 
-public class YYItemHempBrickWet extends FCItemPlacesAsBlock
+public class YYItemHempBrickWet extends FCItemBrickUnfired
 {
-    public YYItemHempBrickWet(int var1)
-    {
-        super(var1, YYBaitMod.yyBlockHempBrickWet.blockID);
-        this.m_bRequireNoEntitiesInTargetBlock = true;
-        this.setUnlocalizedName("yyItemBrickHempWet");
-        this.setCreativeTab(CreativeTabs.tabMaterials);
-    }
-    
+	public YYItemHempBrickWet(int id)
+	{
+		super(id);
+		m_iBlockID = YYStuffAndThings.yyBlockHempBrickWet.blockID;
+		setUnlocalizedName("yyItemBrickHempWet");
+	}
 }
