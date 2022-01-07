@@ -1,3 +1,22 @@
+Version 1.1.0 - 2022-01-07
+
+- Added a new system that determines the maximum health of the player.
+- The starting maximum health in a new world is 10 hearts.
+- If you have more than double the XP levels as the number of your hearts above 5 when you die, you gain an additional heart after a Hardcore Spawn, up to 20 hearts total. Similarly, having fewer levels than that results in losing 1 heart after a Hardcore Spawn, down to 5 hearts total. For example, having 14 XP levels when you die will push you towards 5+14/2=12 hearts.
+- Every 5th XP level above that threshold grants additional hearts.
+- You have the same amount of hunger pips as hearts, but not less than 10.
+- Increased the resolution of the health meter, similarly to the hunger meter. This was primarily motivated by the following change, but it should also make player health more transparent. Also, things do slightly less damage now as damage values had to be rounded, so the 10 starting hearts are slightly more than they previously would have been.
+- Changed health and food based penalties to scale as the player's maximum changes. Note that their cutoff points are no longer necessarily on whole/half hearts/pips.
+- Removed hidden feature where the game was tracking quarter hearts of damage your armor protected you from. After this, the same hit should do the same amount of damage every time, regardless of previous damage blocked by armor.
+- Increased the armor values of the Wool Jacket and the Leather and Tanned Leather Tunic and Pants.
+- Removed the lockout timer from Hardcore Spawns.
+- Changed items dropped on player death to persist in the world until the player who dropped them respawns 10 times. Items dropped on previous deaths are unaffected by this, and will despawn when they were originally scheduled to.
+- Changed the calculations behind new Hardcore Spawn locations. Removed the minimum and maximum distances. Now, there's a ring in which you're most likely to spawn. The further a location is from this ring (towards or away from the original spawn) the less likely you are to respawn there. Accessing the nether in the world widens the ring, fighting the wither and accessing the end make you more likely to spawn further outside the ring.
+- Added config options to change Hardcore Spawn distances.
+- Changed spider web projectiles to place as blocks above slabs.
+- Fixed an oversight where the Fire Aspect and Flame enchantments didn't trigger Creeper explosions.
+
+
 Version 1.0.1 - 2021-12-30
 
 - Updated the addon to BTW CE 1.3.4

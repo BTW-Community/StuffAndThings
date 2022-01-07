@@ -220,13 +220,13 @@ public class FCEntityCreeper extends EntityCreeper
 		}
 	}
 	
-	public void dealFireDamage(int par1)
+	public boolean attackEntityFrom(DamageSource source, int damage)
 	{
-		super.dealFireDamage(par1);
-		if(YYStuffAndThings.yyCreeperFire && !this.getPowered())
+		if(YYStuffAndThings.yyCreeperFire && !this.getPowered() && source.isFireDamage())
 		{
 			this.m_bDeterminedToExplode=true;
 		}
+		return super.attackEntityFrom(source, damage);
 	}
 	
 	//----------- Client Side Functionality -----------//

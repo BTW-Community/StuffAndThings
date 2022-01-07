@@ -30,7 +30,7 @@ public class YYStuffAndThings extends FCAddOn
 	
 	public YYStuffAndThings()
 	{
-		super("Stuff and Things", "1.0.1", "YYST");
+		super("Stuff & Things", "1.1.0", "YYST");
 	}
 	
 	private static Map<String, String> configOptions;
@@ -39,6 +39,16 @@ public class YYStuffAndThings extends FCAddOn
 	public void handleConfigProperties(Map<String, String> propertyValues) {
 		configOptions = propertyValues;
 		yyCreeperFire = Boolean.parseBoolean(configOptions.get("CreeperFire"));
+		
+		hcsStartDistanceMultiplier = Double.parseDouble(configOptions.get("hcsStartDistanceMultiplier"));
+		hcsNetherDistanceMultiplier = Double.parseDouble(configOptions.get("hcsNetherDistanceMultiplier"));
+		hcsWitherDistanceMultiplier = Double.parseDouble(configOptions.get("hcsWitherDistanceMultiplier"));
+		hcsEndDistanceMultiplier = Double.parseDouble(configOptions.get("hcsEndDistanceMultiplier"));
+		
+		hcsStartScatterMultiplier = Double.parseDouble(configOptions.get("hcsStartScatterMultiplier"));
+		hcsNetherScatterMultiplier = Double.parseDouble(configOptions.get("hcsNetherScatterMultiplier"));
+		hcsWitherScatterMultiplier = Double.parseDouble(configOptions.get("hcsWitherScatterMultiplier"));
+		hcsEndScatterMultiplier = Double.parseDouble(configOptions.get("hcsEndScatterMultiplier"));
 	}
 	
 	public String getConfigOption(String option)
@@ -48,9 +58,29 @@ public class YYStuffAndThings extends FCAddOn
 
 	public static boolean yyCreeperFire;
 	
+	public static double hcsStartDistanceMultiplier;
+	public static double hcsNetherDistanceMultiplier;
+	public static double hcsWitherDistanceMultiplier;
+	public static double hcsEndDistanceMultiplier;
+	
+	public static double hcsStartScatterMultiplier;
+	public static double hcsNetherScatterMultiplier;
+	public static double hcsWitherScatterMultiplier;
+	public static double hcsEndScatterMultiplier;
+	
 	@Override
 	public void PreInitialize() {
 		this.registerProperty("CreeperFire", "True", "Set the following to false to disable creepers setting things on fire, blowing up when damaged by fire, and dropping hellfire dust.");
+		
+		this.registerProperty("hcsStartDistanceMultiplier", "1.0", "The following options influence HardcoreSpawn distances. The first four push the ring of highest respawn probability further from the original spawn. The second four make you more likely to spawn further away from the ring. The ones that apply are selected based on the progression milestones achieved in the world.");
+		this.registerProperty("hcsNetherDistanceMultiplier", "2.0");
+		this.registerProperty("hcsWitherDistanceMultiplier", "2.0");
+		this.registerProperty("hcsEndDistanceMultiplier", "2.0");
+		
+		this.registerProperty("hcsStartScatterMultiplier", "1.0");
+		this.registerProperty("hcsNetherScatterMultiplier", "1.0");
+		this.registerProperty("hcsWitherScatterMultiplier", "2.0");
+		this.registerProperty("hcsEndScatterMultiplier", "3.0");
 	}
 
 	@Override
@@ -352,6 +382,13 @@ public class YYStuffAndThings extends FCAddOn
 				new ItemStack(Item.redstone),
 				new ItemStack(FCBetterThanWolves.fcBlockTorchFiniteUnlit)
 		});
+		
+		// armor balance
+		((ItemArmor)FCBetterThanWolves.fcItemArmorWoolChest).damageReduceAmount++;
+		Item.plateLeather.damageReduceAmount++;
+		Item.legsLeather.damageReduceAmount++;
+		((ItemArmor)FCBetterThanWolves.fcItemArmorTannedChest).damageReduceAmount++;
+		((ItemArmor)FCBetterThanWolves.fcItemArmorTannedLeggings).damageReduceAmount++;
 		
 		FCAddOnHandler.LogMessage("Stuff & Things Addon Initialization Complete");
 	}

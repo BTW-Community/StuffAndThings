@@ -30,6 +30,8 @@ EntityPlayer.java
 EntityPlayerMP.java
 FoodStats.java
 ItemMap.java
+Potion.java
+PotionEffect.java
 ```
 Client only:
 ```
