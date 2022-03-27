@@ -66,7 +66,7 @@ public class FCEntitySpider extends EntitySpider
 		
 		if ( !DoesLightAffectAggessiveness() || getBrightness( 1F ) < 0.5F )
 		{            
-			targetEntity = worldObj.getClosestVulnerablePlayerToEntity( this, m_dSpiderAttackRange*2 );
+			targetEntity = worldObj.getClosestVulnerablePlayerToEntity( this, m_dSpiderAttackRange );
 		}
 		
 		if ( targetEntity == null )
@@ -82,7 +82,7 @@ public class FCEntitySpider extends EntitySpider
 			{
 				FCEntityChicken chicken = (FCEntityChicken)chickenIterator.next();
 				
-				if ( !chicken.isLivingDead )
+				if ( !chicken.isLivingDead && chicken.hasInteractedWithPlayer )
 				{
 					double dDeltaX = posX - chicken.posX;
 					double dDeltaY = posY - chicken.posY;

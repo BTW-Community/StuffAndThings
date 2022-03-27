@@ -43,18 +43,53 @@ public class FCBlockSaplingLegacy extends BlockSapling
 	}
 
 	@Override
-	//Debug method
 	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX, float hitY, float hitZ) {
-		if (!FCUtilsReflection.isObfuscated()) {
-			if (!world.isRemote) {
-				attemptToGrow(world, x, y, z, world.rand);
+		if(player.experienceLevel>=2 && player.isUsingSpecialKey())
+		{
+			boolean canEnchant = true;
+			foundBlock:
+			for(int i=-YYBlockTotemBottom.blockingRange; i<=YYBlockTotemBottom.blockingRange; i++)
+			{
+				for(int k=-YYBlockTotemBottom.blockingRange; k<=YYBlockTotemBottom.blockingRange; k++)
+				{
+					for(int y1=0; y1<256; y1++)
+					{
+						int x1 = x+i;
+						int z1 = z+k;
+						int id = world.getBlockId(x1, y1, z1);
+						int metadata = world.getBlockMetadata(x1, y1, z1);
+						if
+						(
+							id==YYStuffAndThings.yyBlockTotemBottom.blockID ||
+							id==YYStuffAndThings.yyBlockTotemSapling.blockID ||
+							(id==YYStuffAndThings.yyBlockTotemCarving.blockID && (metadata&8)==8)
+						)
+						{
+							canEnchant=false;
+							if(!world.isRemote)
+							{
+								int xd = YYBlockTotemBottom.blockingRange - Math.abs(i) +1;
+								int zd = YYBlockTotemBottom.blockingRange - Math.abs(k) +1;
+								player.addChatMessage
+								(
+									"Try doing that " + xd + " block" + (xd!=1?"s":"") + " to the " + (i<0 ? "East" : "West") +
+									" or " + zd + " block" + (zd!=1?"s":"") + " to the " + (k>0 ? "North" : "South")
+								);
+							}
+							break foundBlock;
+						}
+					}
+				}
 			}
-
-			return true;
+			
+			if(canEnchant)
+			{
+				player.experienceLevel-=2;
+				world.setBlockWithNotify(x, y, z, YYStuffAndThings.yyBlockTotemSapling.blockID);
+				return true;
+			}
 		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	@Override

@@ -26,9 +26,26 @@ public class YYStuffAndThings extends FCAddOn
 	public static Block yyBlockTorchSparklingUnlit;
 	public static Block yyBlockTorchSparklingBurning;
 	
+	public static YYItemYarnSpinning yyItemYarnSpinning;
+	public static Item yyItemDropSpindle;
+	
+	public static Block yyBlockTotemSapling;
+	public static YYBlockTotem yyBlockTotem;
+	public static YYBlockTotemBottom yyBlockTotemBottom;
+	public static Block yyBlockTotemCarving;
+	
+	public static FCItemFood yyItemChickenDecaying;
+	public static FCItemFood yyItemBeefDecaying;
+	public static FCItemFood yyItemPorkDecaying;
+	public static FCItemFood yyItemMuttonDecaying;
+	public static FCItemFood yyItemFishDecaying;
+	
+	public static FCItemFood yyItemSpoiledMeat;
+	public static FCItemFood yyItemCookedMeat;
+	
 	public YYStuffAndThings()
 	{
-		super("Stuff & Things", "1.1.0", "YYST");
+		super("Stuff & Things", "1.2.0", "YYST");
 	}
 	
 	private static Map<String, String> configOptions;
@@ -37,6 +54,7 @@ public class YYStuffAndThings extends FCAddOn
 	public void handleConfigProperties(Map<String, String> propertyValues) {
 		configOptions = propertyValues;
 		yyCreeperFire = Boolean.parseBoolean(configOptions.get("CreeperFire"));
+		yyHCMeat = Boolean.parseBoolean(configOptions.get("HardcoreMeat"));
 		
 		hcsStartDistanceMultiplier = Double.parseDouble(configOptions.get("hcsStartDistanceMultiplier"));
 		hcsNetherDistanceMultiplier = Double.parseDouble(configOptions.get("hcsNetherDistanceMultiplier"));
@@ -55,6 +73,7 @@ public class YYStuffAndThings extends FCAddOn
 	}
 
 	public static boolean yyCreeperFire;
+	public static boolean yyHCMeat;
 	
 	public static double hcsStartDistanceMultiplier;
 	public static double hcsNetherDistanceMultiplier;
@@ -69,6 +88,7 @@ public class YYStuffAndThings extends FCAddOn
 	@Override
 	public void PreInitialize() {
 		this.registerProperty("CreeperFire", "True", "Set the following to false to disable creepers setting things on fire, blowing up when damaged by fire, and dropping hellfire dust.");
+		this.registerProperty("HardcoreMeat", "False", "Set the following to True to enable an unfinished and unsupported gamemode, Hardcore Meat.");
 		
 		this.registerProperty("hcsStartDistanceMultiplier", "1.0", "The following options influence HardcoreSpawn distances. The first four push the ring of highest respawn probability further from the original spawn. The second four make you more likely to spawn further away from the ring. The ones that apply are selected based on the progression milestones achieved in the world.");
 		this.registerProperty("hcsNetherDistanceMultiplier", "2.0");
@@ -172,6 +192,8 @@ public class YYStuffAndThings extends FCAddOn
 				new ItemStack(FCBetterThanWolves.fcBlockBasketWicker),
 				new Object[] {
 					new ItemStack(yyItemStitchedBark),
+					new ItemStack(yyItemStitchedBark),
+					new ItemStack(yyItemStitchedBark),
 					new ItemStack(yyItemStitchedBark)
 		});
 		
@@ -181,15 +203,7 @@ public class YYStuffAndThings extends FCAddOn
 				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata),
 				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata),
 				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata),
-				new ItemStack(FCBetterThanWolves.fcItemHempFibers)
-		});
-		FCRecipes.AddShapelessRecipe(
-			new ItemStack(yyItemBarkStitching, 1, YYItemBarkStitching.maxDamage-1),
-			new Object[] {
-				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata),
-				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata),
-				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata),
-				new ItemStack(Item.silk)
+				new ItemStack(FCBetterThanWolves.fcItemBark, 1, FCUtilsInventory.m_iIgnoreMetadata)
 		});
 		
 		FCRecipes.RemoveVanillaRecipe(
@@ -389,6 +403,95 @@ public class YYStuffAndThings extends FCAddOn
 		((ItemArmor)FCBetterThanWolves.fcItemArmorTannedChest).damageReduceAmount++;
 		((ItemArmor)FCBetterThanWolves.fcItemArmorTannedLeggings).damageReduceAmount++;
 		
+		// yarn
+		yyItemDropSpindle = new Item(26008).setUnlocalizedName("yyItemDropSpindle").SetFilterableProperties(Item.m_iFilterable_Narrow);
+		yyItemYarnSpinning = new YYItemYarnSpinning(26007);
+		FCRecipes.AddRecipe(
+			new ItemStack(yyItemDropSpindle),
+			new Object[] {
+				"P",
+				"S",
+				'P', FCBetterThanWolves.fcItemChiselWood,
+				'S', FCBetterThanWolves.fcItemStone
+		});
+		FCRecipes.AddShapelessRecipe(
+			new ItemStack(yyItemYarnSpinning, 1, YYItemYarnSpinning.maxDamage - 1),
+			new ItemStack[] {
+				new ItemStack(yyItemDropSpindle),
+				new ItemStack(FCBetterThanWolves.fcItemWool, 1, FCUtilsInventory.m_iIgnoreMetadata)
+		});
+		
+		
+		// totem
+		yyBlockTotemSapling = new YYBlockTotemSapling(1505);
+		Item.itemsList[yyBlockTotemSapling.blockID] = new ItemBlock(1505-256);
+		yyBlockTotem = new YYBlockTotem(1506);
+		Item.itemsList[yyBlockTotem.blockID] = new ItemBlock(1506-256);
+		yyBlockTotemBottom = new YYBlockTotemBottom(1507);
+		Item.itemsList[yyBlockTotemBottom.blockID] = new ItemBlock(1507-256);
+		yyBlockTotemCarving = new YYBlockTotemCarving(1508);
+		Item.itemsList[yyBlockTotemCarving.blockID] = new ItemBlock(1508-256);
+		
+		// hardcore meat
+		yyItemCookedMeat = new FCItemFood(26009, 4, 0.25F, true, "yyItemCookedMeat", true);
+		yyItemSpoiledMeat = new FCItemFood(26010, 3, 0.25F, true, "yyItemSpoiledMeat", true);
+		yyItemSpoiledMeat.setPotionEffect(Potion.hunger.id, FCItemFood.m_iFoodPoisioningIncreasedDuration, 0, 0.7F);
+		FCRecipes.AddShapelessRecipe(
+			new ItemStack( FCBetterThanWolves.fcItemMeatCured ),
+			new Object[] {
+				new ItemStack(yyItemSpoiledMeat),
+				new ItemStack(FCBetterThanWolves.fcItemNitre
+		)});
+		FCRecipes.AddCampfireRecipe(yyItemSpoiledMeat.itemID, new ItemStack(yyItemCookedMeat));
+		FurnaceRecipes.smelting().addSmelting(yyItemSpoiledMeat.itemID, new ItemStack(yyItemCookedMeat), 0);
+
+		yyItemChickenDecaying = new FCItemFood(26011, FCItemFood.m_iChickenRawHungerHealed, FCItemFood.m_fChickenSaturationModifier, true, "yyItemChickenDecaying", true).SetStandardFoodPoisoningEffect();
+		yyItemBeefDecaying = new FCItemFood( 26012, FCItemFood.m_iBeefRawHungerHealed, FCItemFood.m_fBeefSaturationModifier, true, "yyItemBeefDecaying", true).SetStandardFoodPoisoningEffect();
+		yyItemMuttonDecaying = new FCItemFood(26013, FCItemFood.m_iMuttonRawHungerHealed, FCItemFood.m_fMuttonSaturationModifier, true, "yyItemMuttonDecaying", true).SetStandardFoodPoisoningEffect();
+		yyItemFishDecaying = new FCItemFood(26014, FCItemFood.m_iFishRawHungerHealed, FCItemFood.m_fFishSaturationModifier, false, "yyItemFishDecaying").SetStandardFoodPoisoningEffect();
+		yyItemPorkDecaying = new FCItemFood(26015, FCItemFood.m_iPorkChopRawHungerHealed, FCItemFood.m_fPorkChopSaturationModifier, true, "yyItemPorkDecaying", true).SetStandardFoodPoisoningEffect();
+		
+		FurnaceRecipes.smelting().addSmelting(yyItemPorkDecaying.itemID, new ItemStack(Item.porkCooked), 0.35F);
+		FurnaceRecipes.smelting().addSmelting(yyItemBeefDecaying.itemID, new ItemStack(Item.beefCooked), 0.35F);
+		FurnaceRecipes.smelting().addSmelting(yyItemChickenDecaying.itemID, new ItemStack(Item.chickenCooked), 0.35F);
+		FurnaceRecipes.smelting().addSmelting(yyItemFishDecaying.itemID, new ItemStack(Item.fishCooked), 0.35F);
+		FurnaceRecipes.smelting().addSmelting(yyItemMuttonDecaying.itemID, new ItemStack(FCBetterThanWolves.fcItemMuttonCooked), 0.35F);
+		
+		FCRecipes.AddCampfireRecipe(yyItemPorkDecaying.itemID, new ItemStack(Item.porkCooked));
+		FCRecipes.AddCampfireRecipe(yyItemBeefDecaying.itemID, new ItemStack(Item.beefCooked));
+		FCRecipes.AddCampfireRecipe(yyItemChickenDecaying.itemID, new ItemStack(Item.chickenCooked));
+		FCRecipes.AddCampfireRecipe(yyItemFishDecaying.itemID, new ItemStack(Item.fishCooked));
+		FCRecipes.AddCampfireRecipe(yyItemMuttonDecaying.itemID, new ItemStack(FCBetterThanWolves.fcItemMuttonCooked));
+		
+		FCRecipes.AddShapelessRecipe(new ItemStack(FCBetterThanWolves.fcItemMeatCured), new Object[]{new ItemStack(yyItemChickenDecaying), new ItemStack(FCBetterThanWolves.fcItemNitre)});
+		FCRecipes.AddShapelessRecipe(new ItemStack(FCBetterThanWolves.fcItemMeatCured), new Object[]{new ItemStack(yyItemBeefDecaying), new ItemStack(FCBetterThanWolves.fcItemNitre)});
+		FCRecipes.AddShapelessRecipe(new ItemStack(FCBetterThanWolves.fcItemMeatCured), new Object[]{new ItemStack(yyItemMuttonDecaying), new ItemStack(FCBetterThanWolves.fcItemNitre)});
+		FCRecipes.AddShapelessRecipe(new ItemStack(FCBetterThanWolves.fcItemMeatCured), new Object[]{new ItemStack(yyItemFishDecaying), new ItemStack(FCBetterThanWolves.fcItemNitre)});
+		FCRecipes.AddShapelessRecipe(new ItemStack(FCBetterThanWolves.fcItemMeatCured), new Object[]{new ItemStack(yyItemPorkDecaying), new ItemStack(FCBetterThanWolves.fcItemNitre)});
+		
+		FCRecipes.AddStokedCauldronRecipe(
+			new ItemStack( FCBetterThanWolves.fcItemTallow, 1 ),
+			new ItemStack[] {new ItemStack(yyItemPorkDecaying, 1)});
+		FCRecipes.AddStokedCauldronRecipe(
+			new ItemStack( FCBetterThanWolves.fcItemTallow, 1 ),
+			new ItemStack[] {new ItemStack(yyItemBeefDecaying, 4)});
+		FCRecipes.AddStokedCauldronRecipe(
+			new ItemStack( FCBetterThanWolves.fcItemTallow, 1 ),
+			new ItemStack[] {new ItemStack(yyItemMuttonDecaying, 1)});
+		
+		if(yyHCMeat)
+		{
+			Item.porkRaw.setUnlocalizedName("yyItemPorkFresh");
+			Item.beefRaw.setUnlocalizedName("yyItemBeefFresh");
+			Item.chickenRaw.setUnlocalizedName("yyItemChickenFresh");
+			Item.fishRaw.setUnlocalizedName("yyItemFishFresh");
+			FCBetterThanWolves.fcItemMuttonRaw.setUnlocalizedName("yyItemMuttonFresh");
+		}
+		else
+		{
+			YYMeatDecay.stats.clear();
+		}
+				
 		FCAddOnHandler.LogMessage("Stuff & Things Addon Initialization Complete");
 	}
 	

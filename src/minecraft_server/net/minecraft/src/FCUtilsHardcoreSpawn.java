@@ -156,19 +156,22 @@ public class FCUtilsHardcoreSpawn
 			newPlayer.foodStats.setFoodLevel( iFoodLevel );            
 		}
 		
-		int oldXP = oldPlayer.experienceLevel/2+5;
+		int oldXP = oldPlayer.experienceLevel/2;
+		int room = oldXP;
+		oldXP += 5;
 		int oldHearts = oldPlayer.getMaxHealth()/7;
+		int oldHearts2 = (int)(((double)(oldHearts-5))/2+5);
 		if(oldHearts < oldXP)
 		{
 			newPlayer.setMaxHealth(7*(oldHearts+1+(oldPlayer.experienceLevel+10-2*oldHearts)/5));
 		}
-		if(oldHearts == oldXP)
-		{
-			newPlayer.setMaxHealth(7*oldHearts);
-		}
-		if(oldHearts > oldXP)
+		else if(oldHearts2 >= oldXP)
 		{
 			newPlayer.setMaxHealth(7*(oldHearts-1));
+		}
+		else
+		{
+			newPlayer.setMaxHealth(7*oldHearts);
 		}
 		newPlayer.setMaxFood(6*newPlayer.getMaxHealth()/7);
 		newPlayer.foodStats.setFoodLevel( newPlayer.foodStats.maxFood);
@@ -275,7 +278,7 @@ public class FCUtilsHardcoreSpawn
 					{
 						// set the time to the next morning if this is single player
 
-						lOverworldTime = ( ( lOverworldTime / 24000L ) + 1 ) * 24000L;
+						lOverworldTime = ( ( lOverworldTime / (8*24000L) ) + 1 ) * (8*24000L);
 
 						for ( int iTempCount = 0; iTempCount < MinecraftServer.getServer().worldServers.length; ++iTempCount)
 						{

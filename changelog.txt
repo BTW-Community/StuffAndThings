@@ -1,3 +1,17 @@
+Version 1.2.0 - 2022-03-27
+
+- Changed Zombies, Spiders, and Squids to not attack animals that spawned on world generation and haven't interacted with a player. Note that this only applies to animals in newly generated chunks.
+- Removed passive, food based health regeneration. The only ways of gaining health now are potions (and Golden Apples) and the following mechanics.
+- Added healing totem poles. They can be created by "enchanting" a sapling, and carving the tree trunk it eventually grow into. Saplings can be enchanted for a cost of 2 XP levels by right clicking them while holding the alternate use button (Ctrl). The eyes on carved totem poles will eventually turn green, at which point right clicking the bottom block heals the player. New totems can't be created too close to already existing totems.
+- Increased the durability and speed of the Iron Chisel, and slightly decreased the speed of the Diamond Chisel.
+- Added a new Drop Spindle item. It is crafted with a Pointy Stick above a Loose Stone, and it can be used to spin a piece of Wool into String.
+- Changed Knitting to give 2 Wool Knit from 1 Wool instead of the previous 1 Wool Knit from 2 Wool.
+- Changed Bark Stitching to be crafted with 4 Bark and no String, and Bark Boxes to be crafted with 4 Stiched Bark.
+- Reverted the previous change that made Spiders notice players from further away.
+- Changed Hardcore Spawn to reset the moon phase to a full moon in singleplayer.
+- Fixed an issue that caused some armor indicator icons to not show up when the player maximum health was below 10 hearts.
+
+
 Version 1.1.0 - 2022-01-07
 
 - Added a new system that determines the maximum health of the player.

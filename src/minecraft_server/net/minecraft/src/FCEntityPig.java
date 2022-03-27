@@ -149,7 +149,7 @@ public class FCEntityPig extends EntityPig
 	@Override
 	public boolean IsValidZombieSecondaryTarget( EntityZombie zombie )
 	{
-		return true;
+		return hasInteractedWithPlayer;
 	}
 	
 	@Override

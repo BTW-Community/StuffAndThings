@@ -1,16 +1,100 @@
-diff --git a/minecraft/net/minecraft/src/EntityCreature.java b/minecraft/net/minecraft/src/EntityCreature.java
-index 74bb74e..5de5cdb 100644
---- a/minecraft/net/minecraft/src/EntityCreature.java
-+++ b/minecraft/net/minecraft/src/EntityCreature.java
-@@ -43,7 +43,7 @@ public abstract class EntityCreature extends EntityLiving
- 		}
- 
- 		this.hasAttacked = this.isMovementCeased();
--		float var1 = 16.0F;
-+		float var1 = 32.0F;
- 
- 		if (this.entityToAttack == null)
+diff --git a/minecraft/net/minecraft/src/EntityAnimal.java b/minecraft/net/minecraft/src/EntityAnimal.java
+index 393dc08..9da24e3 100644
+--- a/minecraft/net/minecraft/src/EntityAnimal.java
++++ b/minecraft/net/minecraft/src/EntityAnimal.java
+@@ -101,7 +101,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	 */
+ 	protected void attackEntity(Entity par1Entity, float par2)
+ 	{
+-		if (par1Entity instanceof EntityPlayer)
++		if (par1Entity instanceof EntityPlayer || par1Entity instanceof FCEntityWolf)
  		{
+ 			if (par2 < 3.0F)
+ 			{
+@@ -232,6 +232,10 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 			 */
+ 			resetInLove();
+ 			PanickNearbyAnimals( par1DamageSource );
++			if(par1DamageSource.getEntity() instanceof EntityPlayer)
++			{
++				hasInteractedWithPlayer = true;
++			}
+ 			// END FCMOD
+ 			return super.attackEntityFrom(par1DamageSource, par2);
+ 		}
+@@ -489,6 +493,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	protected static final int m_iInLoveDataWatcherID = 22;
+ 	protected static final int m_iWearingBreedingHarnessDataWatcherID = 23;
+ 
++	protected boolean hasInteractedWithPlayer = true;
++	
+ 	@Override
+ 	protected void entityInit()
+ 	{
+@@ -509,6 +515,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 		tag.setBoolean( "BreedingHarness", getWearingBreedingHarness() );
+ 		tag.setInteger( "fcHungerCnt", m_iHungerCountdown );
+ 		tag.setInteger( "fcHealCnt", m_iHealingCountdown );
++		
++		tag.setBoolean("hasInteractedWithPlayer", hasInteractedWithPlayer);
+ 	}
+ 
+ 	@Override
+@@ -545,6 +553,11 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 		{
+ 			ResetHealingCountdown();
+ 		}
++		
++		if(tag.hasKey("hasInteractedWithPlayer"))
++		{
++			hasInteractedWithPlayer = tag.getBoolean("hasInteractedWithPlayer");
++		}
+ 	}
+ 
+ 	@Override
+@@ -680,7 +693,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	@Override
+ 	public boolean IsSecondaryTargetForSquid()
+ 	{
+-		return true;
++		return hasInteractedWithPlayer;
+ 	}
+ 
+ 	@Override
+@@ -750,6 +763,10 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 
+ 	public void setInLove( int iInLove )
+ 	{
++		if(iInLove>0)
++		{
++			hasInteractedWithPlayer = true;
++		}
+ 		dataWatcher.updateObject( m_iInLoveDataWatcherID, Integer.valueOf( iInLove ) );
+ 	}
+ 
+@@ -1221,8 +1238,13 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 
+ 	public boolean IsTemptingItem( ItemStack stack )
+ 	{
+-		return GetItemFoodValue( stack ) > 0 || 
++		boolean result = GetItemFoodValue( stack ) > 0 || 
+ 				( isBreedingItem( stack ) && IsReadyToEatBreedingItem() );
++		if(result)
++		{
++			hasInteractedWithPlayer = true;
++		}
++		return result;
+ 	}
+ 
+ 	public boolean IsEdibleItem( ItemStack stack )
+@@ -1372,6 +1394,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	{
+ 		ItemStack heldItem = player.inventory.getCurrentItem();
+ 
++		hasInteractedWithPlayer = true;
+ 		if ( heldItem != null )
+ 		{
+ 			if ( IsEdibleItem( heldItem ) )
 diff --git a/minecraft/net/minecraft/src/EntityCreeper.java b/minecraft/net/minecraft/src/EntityCreeper.java
 index 5252d4f..ce30c71 100644
 --- a/minecraft/net/minecraft/src/EntityCreeper.java
@@ -61,10 +145,43 @@ index b732510..68fb886 100644
  			}
  	
 diff --git a/minecraft/net/minecraft/src/EntityItem.java b/minecraft/net/minecraft/src/EntityItem.java
-index 98e5268..66ee587 100644
+index 98e5268..ef8f911 100644
 --- a/minecraft/net/minecraft/src/EntityItem.java
 +++ b/minecraft/net/minecraft/src/EntityItem.java
-@@ -291,6 +291,9 @@ public class EntityItem extends Entity
+@@ -135,6 +135,32 @@ public class EntityItem extends Entity
+ 		
+ 		++this.age;
+ 
++		if(!worldObj.isRemote)
++		{
++			ItemStack stack = getEntityItem();
++			YYMeatDecay decay = YYMeatDecay.getDecay(stack);
++			if(decay != null)
++			{
++				int decayNumber = decay.getDecayNumber(stack, rand);
++				if(decayNumber!=0)
++				{
++					if(stack.stackSize == decayNumber)
++					{
++						this.setDead();
++					}
++					else
++					{
++						stack.stackSize -= decayNumber;
++						setEntityItemStack(stack);
++					}
++					if(decay.to != null)
++					{
++						FCUtilsItem.EjectStackWithRandomVelocity(worldObj, posX, posY, posZ, new ItemStack(decay.to, decayNumber));
++					}
++				}
++			}
++		}
++		
+ 		// FCMOD: Code change
+ 		/*
+ 		if (!this.worldObj.isRemote && this.age >= 6000)
+@@ -291,6 +317,9 @@ public class EntityItem extends Entity
  		
  		// FCMOD: Code added
  		par1NBTTagCompound.setLong( "fcDespawnTime", m_lAbsoluteItemDespawnTime );
@@ -74,7 +191,7 @@ index 98e5268..66ee587 100644
  		// END FCMOD    
  	}
  
-@@ -309,7 +312,16 @@ public class EntityItem extends Entity
+@@ -309,7 +338,16 @@ public class EntityItem extends Entity
  		{
  			m_lAbsoluteItemDespawnTime = par1NBTTagCompound.getLong( "fcDespawnTime" );
  		}
@@ -92,7 +209,7 @@ index 98e5268..66ee587 100644
  		
  		if (this.getEntityItem() == null)
  		{
-@@ -425,6 +437,9 @@ public class EntityItem extends Entity
+@@ -425,6 +463,9 @@ public class EntityItem extends Entity
  	// FCMOD: Code added    
  	private long m_lAbsoluteItemDespawnTime = 0;
  	
@@ -102,7 +219,7 @@ index 98e5268..66ee587 100644
  	private void UpdateHardcoreBuoy()
  	{
  		if ( FCBetterThanWolves.IsHardcoreBuoyEnabled( worldObj ) )
-@@ -726,7 +741,23 @@ public class EntityItem extends Entity
+@@ -726,7 +767,23 @@ public class EntityItem extends Entity
  	{
  		if ( !worldObj.isRemote )
  		{
@@ -127,7 +244,7 @@ index 98e5268..66ee587 100644
  			{
  				// using getTotalWorldTime() here so that /time commands and time advancement due to HC Spawn don't affect it
  				
-@@ -752,7 +783,8 @@ public class EntityItem extends Entity
+@@ -752,7 +809,8 @@ public class EntityItem extends Entity
  		// using getTotalWorldTime() here so that /time commands and time advancement due to HC Spawn don't affect it
  		
  		if (!worldObj.isRemote) {
@@ -138,7 +255,7 @@ index 98e5268..66ee587 100644
  	}
  	
 diff --git a/minecraft/net/minecraft/src/EntityPlayer.java b/minecraft/net/minecraft/src/EntityPlayer.java
-index 2d298d0..610d496 100644
+index 2d298d0..d787bd3 100644
 --- a/minecraft/net/minecraft/src/EntityPlayer.java
 +++ b/minecraft/net/minecraft/src/EntityPlayer.java
 @@ -130,7 +130,33 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
@@ -185,7 +302,21 @@ index 2d298d0..610d496 100644
  		// END FCMOD
  	}
  
-@@ -959,6 +987,20 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -363,6 +391,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 		// FCMOD: Added
+ 		UpdateModStatusVariables();
+ 		// END FCMOD
++		if(!worldObj.isRemote)
++		{
++			for(ItemStack stack : YYMeatDecay.decayMeatInInventory(inventory, rand, 0, 35))
++			{
++				FCUtilsItem.EjectStackWithRandomVelocity(worldObj, posX, posY, posZ, stack);
++			}
++		}
+ 	}
+ 
+ 	/**
+@@ -959,6 +994,20 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 */
  	public boolean attackEntityFrom(DamageSource par1DamageSource, int par2)
  	{
@@ -206,7 +337,7 @@ index 2d298d0..610d496 100644
  		if (this.isEntityInvulnerable())
  		{
  			return false;
-@@ -1141,6 +1183,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1141,6 +1190,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  			this.field_94063_bt.func_94547_a(par1DamageSource, var3, par2);
  		}
  	}
@@ -223,7 +354,7 @@ index 2d298d0..610d496 100644
  
  	/**
  	 * Displays the furnace GUI for the passed in furnace entity. Args: tileEntityFurnace
-@@ -2099,7 +2151,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2099,7 +2158,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  			return false;
  		}
  		// END FCMOD
@@ -232,7 +363,7 @@ index 2d298d0..610d496 100644
  	}
  
  	/**
-@@ -2415,11 +2467,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2415,11 +2474,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	private static final int m_iSpawnChunksVisualizationLocationJDataWatcherID = 30;
  	private static final int m_iSpawnChunksVisualizationLocationKDataWatcherID = 31;
  	
@@ -248,7 +379,7 @@ index 2d298d0..610d496 100644
  	protected void ReadModDataFromNBT( NBTTagCompound tag )
  	{
  		if ( tag.hasKey( "fcTimeOfLastSpawnAssignment" ) )
-@@ -2451,6 +2507,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2451,6 +2514,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		{
  			m_iInGloomCounter = tag.getInteger( "fcGloomCounter" );
  		}
@@ -265,7 +396,7 @@ index 2d298d0..610d496 100644
  	}
  	
  	protected void WriteModDataToNBT( NBTTagCompound tag )
-@@ -2470,6 +2536,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2470,6 +2543,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 	
  	 	tag.setInteger( "fcGloomLevel", GetGloomLevel() );
  	 	tag.setInteger( "fcGloomCounter", m_iInGloomCounter );
@@ -275,7 +406,7 @@ index 2d298d0..610d496 100644
  	}
  	
  	@Override
-@@ -2542,13 +2611,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2542,13 +2618,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	@Override
  	public boolean CanJump()
  	{		
@@ -291,7 +422,7 @@ index 2d298d0..610d496 100644
  	}
  	
  	@Override
-@@ -2760,7 +2829,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2760,7 +2836,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	
  	public boolean HasStatusPenalty()
  	{
@@ -300,7 +431,7 @@ index 2d298d0..610d496 100644
  	}
  	
  	public int GetMaximumStatusPenaltyLevel()
-@@ -3255,13 +3324,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -3255,13 +3331,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	protected boolean IsPlayerHoldingSail()
  	{
  		ItemStack currentItemStack = inventory.mainInventory[inventory.currentItem];
@@ -429,7 +560,7 @@ index c47163d..451f9ad 100644
  	
  	private boolean IsInGloom()
 diff --git a/minecraft/net/minecraft/src/FoodStats.java b/minecraft/net/minecraft/src/FoodStats.java
-index dcff638..8295bd0 100644
+index dcff638..7e54e56 100644
 --- a/minecraft/net/minecraft/src/FoodStats.java
 +++ b/minecraft/net/minecraft/src/FoodStats.java
 @@ -2,12 +2,13 @@ package net.minecraft.src;
@@ -534,7 +665,7 @@ index dcff638..8295bd0 100644
  		}
  	}
  	
-@@ -267,11 +281,11 @@ public class FoodStats
+@@ -267,13 +281,13 @@ public class FoodStats
  			foodExhaustionLevel = 0F;
  		}
  
@@ -546,10 +677,13 @@ index dcff638..8295bd0 100644
 -			if ( foodTimer >= 600 ) // once every 30 seconds
 +			if ( foodTimer >= 1800 ) // once every 30 seconds
  			{
- 				player.heal( 1 );
+-				player.heal( 1 );
++				//player.heal( 1 );
  				foodTimer = 0;
+ 			}
+ 		}
 diff --git a/minecraft/net/minecraft/src/GuiIngame.java b/minecraft/net/minecraft/src/GuiIngame.java
-index ec30ae0..cc52414 100644
+index ec30ae0..85a3e56 100644
 --- a/minecraft/net/minecraft/src/GuiIngame.java
 +++ b/minecraft/net/minecraft/src/GuiIngame.java
 @@ -152,6 +152,10 @@ public class GuiIngame extends Gui
@@ -568,7 +702,7 @@ index ec30ae0..cc52414 100644
  				int var28;
  
 -				for (var25 = 0; var25 < 10; ++var25)
-+				for (var25 = 0; var25 < this.mc.thePlayer.getMaxHealth()/7; ++var25)
++				for (var25 = 0; var25 < Math.max(mc.thePlayer.getMaxHealth()/7, 10); ++var25)
  				{
 -					if (var23 > 0)
 +					if (var23 > 0 & var25<10)
@@ -588,21 +722,25 @@ index ec30ae0..cc52414 100644
  					{
  						var29 = var47 + this.rand.nextInt(2);
  					}
-@@ -224,7 +228,12 @@ public class GuiIngame extends Gui
+@@ -224,8 +228,15 @@ public class GuiIngame extends Gui
  					{
  						var30 = 5;
  					}
 -
+-					this.drawTexturedModalRect(var28, var29, 16 + var27 * 9, 9 * var30, 9, 9);
 +					
 +					if(var25>=10)
 +					{
 +						var29 -= 10;
 +					}
-+					
- 					this.drawTexturedModalRect(var28, var29, 16 + var27 * 9, 9 * var30, 9, 9);
++					if(var25<mc.thePlayer.getMaxHealth()/7)
++					{
++						this.drawTexturedModalRect(var28, var29, 16 + var27 * 9, 9 * var30, 9, 9);
++					}
  
  					if (var11)
-@@ -240,15 +249,20 @@ public class GuiIngame extends Gui
+ 					{
+@@ -240,15 +251,20 @@ public class GuiIngame extends Gui
  						}
  					}
  
@@ -626,7 +764,7 @@ index ec30ae0..cc52414 100644
  				}
  
  				this.mc.mcProfiler.endStartSection("food");
-@@ -333,9 +347,10 @@ public class GuiIngame extends Gui
+@@ -333,9 +349,10 @@ public class GuiIngame extends Gui
  							this.drawTexturedModalRect(var19 - var28 * 8 - 9, var22, 25, 18, 9, 9);
  						}
  					}
@@ -638,7 +776,7 @@ index ec30ae0..cc52414 100644
  				{                	
  					iSightlessTextOffset = 0;
  				}
-@@ -1394,7 +1409,7 @@ public class GuiIngame extends Gui
+@@ -1394,7 +1411,7 @@ public class GuiIngame extends Gui
  			m_iFoodOverlayShakeCounter--;
  		}
  		
@@ -647,7 +785,7 @@ index ec30ae0..cc52414 100644
  		{
  			int iShankScreenY = iScreenY;
  			int iShankTextureOffsetX = 16;
-@@ -1426,8 +1441,12 @@ public class GuiIngame extends Gui
+@@ -1426,8 +1443,12 @@ public class GuiIngame extends Gui
  				iShankScreenY = iScreenY + iShakeAmount;
  			}
  
@@ -762,19 +900,116 @@ index ed06573..f5d8f40 100644
  			{
  				this.performEffect(par1EntityLiving);
  			}
-diff --git a/minecraft_server/net/minecraft/src/EntityCreature.java b/minecraft_server/net/minecraft/src/EntityCreature.java
-index 8fb2bf7..3244c1d 100644
---- a/minecraft_server/net/minecraft/src/EntityCreature.java
-+++ b/minecraft_server/net/minecraft/src/EntityCreature.java
-@@ -43,7 +43,7 @@ public abstract class EntityCreature extends EntityLiving
- 		}
+diff --git a/minecraft/net/minecraft/src/SpawnerAnimals.java b/minecraft/net/minecraft/src/SpawnerAnimals.java
+index 0fc2659..0862737 100644
+--- a/minecraft/net/minecraft/src/SpawnerAnimals.java
++++ b/minecraft/net/minecraft/src/SpawnerAnimals.java
+@@ -325,6 +325,7 @@ public final class SpawnerAnimals
+ 							}
  
- 		this.hasAttacked = this.isMovementCeased();
--		float var1 = 16.0F;
-+		float var1 = 32.0F;
- 
- 		if (this.entityToAttack == null)
+ 							// FCMOD: Added
++							((EntityAnimal)var21).hasInteractedWithPlayer=false;
+ 							var21.PreInitCreature();
+ 							// END FCMOD
+ 							var21.setLocationAndAngles((double)var18, (double)var19, (double)var20, par6Random.nextFloat() * 360.0F, 0.0F);
+diff --git a/minecraft_server/net/minecraft/src/EntityAnimal.java b/minecraft_server/net/minecraft/src/EntityAnimal.java
+index 0c76d32..53f46d2 100644
+--- a/minecraft_server/net/minecraft/src/EntityAnimal.java
++++ b/minecraft_server/net/minecraft/src/EntityAnimal.java
+@@ -101,7 +101,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	 */
+ 	protected void attackEntity(Entity par1Entity, float par2)
+ 	{
+-		if (par1Entity instanceof EntityPlayer)
++		if (par1Entity instanceof EntityPlayer || par1Entity instanceof FCEntityWolf)
  		{
+ 			if (par2 < 3.0F)
+ 			{
+@@ -232,6 +232,10 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 			*/
+ 			resetInLove();
+ 			PanickNearbyAnimals( par1DamageSource );
++			if(par1DamageSource.getEntity() instanceof EntityPlayer)
++			{
++				hasInteractedWithPlayer = true;
++			}
+ 			// END FCMOD
+ 			return super.attackEntityFrom(par1DamageSource, par2);
+ 		}
+@@ -489,6 +493,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	protected static final int m_iInLoveDataWatcherID = 22;
+ 	protected static final int m_iWearingBreedingHarnessDataWatcherID = 23;
+ 	
++	protected boolean hasInteractedWithPlayer = true;
++	
+ 	@Override
+ 	protected void entityInit()
+ 	{
+@@ -509,6 +515,8 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 		tag.setBoolean( "BreedingHarness", getWearingBreedingHarness() );
+ 		tag.setInteger( "fcHungerCnt", m_iHungerCountdown );
+ 		tag.setInteger( "fcHealCnt", m_iHealingCountdown );
++		
++		tag.setBoolean("hasInteractedWithPlayer", hasInteractedWithPlayer);
+ 	}
+ 
+ 	@Override
+@@ -545,6 +553,11 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 		{
+ 			ResetHealingCountdown();
+ 		}
++		
++		if(tag.hasKey("hasInteractedWithPlayer"))
++		{
++			hasInteractedWithPlayer = tag.getBoolean("hasInteractedWithPlayer");
++		}
+ 	}
+ 	
+ 	@Override
+@@ -680,7 +693,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	@Override
+ 	public boolean IsSecondaryTargetForSquid()
+ 	{
+-		return true;
++		return hasInteractedWithPlayer;
+ 	}
+ 	
+ 	@Override
+@@ -750,6 +763,10 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	
+ 	public void setInLove( int iInLove )
+ 	{
++		if(iInLove>0)
++		{
++			hasInteractedWithPlayer = true;
++		}
+ 		dataWatcher.updateObject( m_iInLoveDataWatcherID, Integer.valueOf( iInLove ) );
+ 	}
+    
+@@ -1221,8 +1238,13 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 
+ 	public boolean IsTemptingItem( ItemStack stack )
+ 	{
+-		return GetItemFoodValue( stack ) > 0 || 
+-			( isBreedingItem( stack ) && IsReadyToEatBreedingItem() );
++		boolean result = GetItemFoodValue( stack ) > 0 || 
++				( isBreedingItem( stack ) && IsReadyToEatBreedingItem() );
++		if(result)
++		{
++			hasInteractedWithPlayer = true;
++		}
++		return result;
+ 	}
+ 	
+ 	public boolean IsEdibleItem( ItemStack stack )
+@@ -1372,6 +1394,7 @@ public abstract class EntityAnimal extends EntityAgeable implements IAnimals
+ 	{
+ 		ItemStack heldItem = player.inventory.getCurrentItem();
+ 
++		hasInteractedWithPlayer = true;
+ 		if ( heldItem != null )
+ 		{
+ 			if ( IsEdibleItem( heldItem ) )
 diff --git a/minecraft_server/net/minecraft/src/EntityCreeper.java b/minecraft_server/net/minecraft/src/EntityCreeper.java
 index fcd0429..d1e3c7e 100644
 --- a/minecraft_server/net/minecraft/src/EntityCreeper.java
@@ -825,10 +1060,43 @@ index 48e1ea5..89926f8 100644
  			}
  	
 diff --git a/minecraft_server/net/minecraft/src/EntityItem.java b/minecraft_server/net/minecraft/src/EntityItem.java
-index 4fad945..7d701d1 100644
+index 4fad945..602199e 100644
 --- a/minecraft_server/net/minecraft/src/EntityItem.java
 +++ b/minecraft_server/net/minecraft/src/EntityItem.java
-@@ -291,6 +291,9 @@ public class EntityItem extends Entity
+@@ -134,6 +134,32 @@ public class EntityItem extends Entity
+ 		}
+ 
+ 		++this.age;
++		
++		if(!worldObj.isRemote)
++		{
++			ItemStack stack = getEntityItem();
++			YYMeatDecay decay = YYMeatDecay.getDecay(stack);
++			if(decay != null)
++			{
++				int decayNumber = decay.getDecayNumber(stack, rand);
++				if(decayNumber!=0)
++				{
++					if(stack.stackSize == decayNumber)
++					{
++						this.setDead();
++					}
++					else
++					{
++						stack.stackSize -= decayNumber;
++						setEntityItemStack(stack);
++					}
++					if(decay.to != null)
++					{
++						FCUtilsItem.EjectStackWithRandomVelocity(worldObj, posX, posY, posZ, new ItemStack(decay.to, decayNumber));
++					}
++				}
++			}
++		}
+ 
+ 		// FCMOD: Code change
+ 		/*
+@@ -291,6 +317,9 @@ public class EntityItem extends Entity
  		
  		// FCMOD: Code added
  		par1NBTTagCompound.setLong( "fcDespawnTime", m_lAbsoluteItemDespawnTime );
@@ -838,7 +1106,7 @@ index 4fad945..7d701d1 100644
  		// END FCMOD    
  	}
  
-@@ -309,6 +312,15 @@ public class EntityItem extends Entity
+@@ -309,6 +338,15 @@ public class EntityItem extends Entity
  		{
  			m_lAbsoluteItemDespawnTime = par1NBTTagCompound.getLong( "fcDespawnTime" );
  		}
@@ -854,7 +1122,7 @@ index 4fad945..7d701d1 100644
  		// END FCMOD
  		
  		if (this.getEntityItem() == null)
-@@ -421,6 +433,9 @@ public class EntityItem extends Entity
+@@ -421,6 +459,9 @@ public class EntityItem extends Entity
  	// FCMOD: Code added
  	private long m_lAbsoluteItemDespawnTime = 0;
  	
@@ -864,7 +1132,7 @@ index 4fad945..7d701d1 100644
  	private void UpdateHardcoreBuoy()
  	{
  		if ( FCBetterThanWolves.IsHardcoreBuoyEnabled( worldObj ) )
-@@ -722,7 +737,23 @@ public class EntityItem extends Entity
+@@ -722,7 +763,23 @@ public class EntityItem extends Entity
  	{
  		if ( !worldObj.isRemote )
  		{
@@ -889,7 +1157,7 @@ index 4fad945..7d701d1 100644
  			{
  				// using getTotalWorldTime() here so that /time commands and time advancement due to HC Spawn don't affect it
  				
-@@ -748,7 +779,8 @@ public class EntityItem extends Entity
+@@ -748,7 +805,8 @@ public class EntityItem extends Entity
  		// using getTotalWorldTime() here so that /time commands and time advancement due to HC Spawn don't affect it
  		
  		if (!worldObj.isRemote) {
@@ -900,7 +1168,7 @@ index 4fad945..7d701d1 100644
  	}
  	
 diff --git a/minecraft_server/net/minecraft/src/EntityPlayer.java b/minecraft_server/net/minecraft/src/EntityPlayer.java
-index 88dfbc4..149ec87 100644
+index 88dfbc4..f0f1e8c 100644
 --- a/minecraft_server/net/minecraft/src/EntityPlayer.java
 +++ b/minecraft_server/net/minecraft/src/EntityPlayer.java
 @@ -118,7 +118,33 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
@@ -947,7 +1215,21 @@ index 88dfbc4..149ec87 100644
  		// END FCMOD
  	}
  
-@@ -905,6 +933,20 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -334,6 +362,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 		// FCMOD: Added
+ 		UpdateModStatusVariables();
+ 		// END FCMOD
++		if(!worldObj.isRemote)
++		{
++			for(ItemStack stack : YYMeatDecay.decayMeatInInventory(inventory, rand, 0, 35))
++			{
++				FCUtilsItem.EjectStackWithRandomVelocity(worldObj, posX, posY, posZ, stack);
++			}
++		}
+ 	}
+ 
+ 	/**
+@@ -905,6 +940,20 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 */
  	public boolean attackEntityFrom(DamageSource par1DamageSource, int par2)
  	{
@@ -968,7 +1250,7 @@ index 88dfbc4..149ec87 100644
  		if (this.isEntityInvulnerable())
  		{
  			return false;
-@@ -1087,6 +1129,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1087,6 +1136,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		}
  	}
  
@@ -985,7 +1267,7 @@ index 88dfbc4..149ec87 100644
  	/**
  	 * Displays the furnace GUI for the passed in furnace entity. Args: tileEntityFurnace
  	 */
-@@ -1950,7 +2002,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1950,7 +2009,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  			return false;
  		}
  		// END FCMOD
@@ -994,7 +1276,7 @@ index 88dfbc4..149ec87 100644
  	}
  
  	/**
-@@ -2246,11 +2298,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2246,11 +2305,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	private static final int m_iSpawnChunksVisualizationLocationJDataWatcherID = 30;
  	private static final int m_iSpawnChunksVisualizationLocationKDataWatcherID = 31;
  	
@@ -1010,7 +1292,7 @@ index 88dfbc4..149ec87 100644
  	protected void ReadModDataFromNBT( NBTTagCompound tag )
  	{
  		if ( tag.hasKey( "fcTimeOfLastSpawnAssignment" ) )
-@@ -2282,6 +2338,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2282,6 +2345,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		{
  			m_iInGloomCounter = tag.getInteger( "fcGloomCounter" );
  		}
@@ -1027,7 +1309,7 @@ index 88dfbc4..149ec87 100644
  	}
  	
  	protected void WriteModDataToNBT( NBTTagCompound tag )
-@@ -2301,6 +2367,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2301,6 +2374,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 	
  	 	tag.setInteger( "fcGloomLevel", GetGloomLevel() );
  	 	tag.setInteger( "fcGloomCounter", m_iInGloomCounter );
@@ -1037,7 +1319,7 @@ index 88dfbc4..149ec87 100644
  	}
  	
  	@Override
-@@ -2373,13 +2442,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2373,13 +2449,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	@Override
  	public boolean CanJump()
  	{		
@@ -1053,7 +1335,7 @@ index 88dfbc4..149ec87 100644
  	}
  	
  	@Override
-@@ -2591,7 +2660,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2591,7 +2667,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	
  	public boolean HasStatusPenalty()
  	{
@@ -1062,7 +1344,7 @@ index 88dfbc4..149ec87 100644
  	}
  	
  	public int GetMaximumStatusPenaltyLevel()
-@@ -3086,13 +3155,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -3086,13 +3162,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	protected boolean IsPlayerHoldingSail()
  	{
  		ItemStack currentItemStack = inventory.mainInventory[inventory.currentItem];
@@ -1191,7 +1473,7 @@ index 7aeff1d..5ae9f76 100644
  	
  	private boolean IsInGloom()
 diff --git a/minecraft_server/net/minecraft/src/FoodStats.java b/minecraft_server/net/minecraft/src/FoodStats.java
-index 4518192..4c9c876 100644
+index 4518192..ad848c3 100644
 --- a/minecraft_server/net/minecraft/src/FoodStats.java
 +++ b/minecraft_server/net/minecraft/src/FoodStats.java
 @@ -2,12 +2,13 @@ package net.minecraft.src;
@@ -1289,7 +1571,7 @@ index 4518192..4c9c876 100644
  		
  		int iExcessFood = iFoodGain - ( foodLevel - iPreviousFoodLevel );
  		
-@@ -264,11 +276,11 @@ public class FoodStats
+@@ -264,13 +276,13 @@ public class FoodStats
  			foodExhaustionLevel = 0F;
  		}
  
@@ -1301,8 +1583,11 @@ index 4518192..4c9c876 100644
 -			if ( foodTimer >= 600 ) // once every 30 seconds
 +			if ( foodTimer >= 1800 ) // once every 30 seconds
  			{
- 				player.heal( 1 );
+-				player.heal( 1 );
++				//player.heal( 1 );
  				foodTimer = 0;
+ 			}
+ 		}
 diff --git a/minecraft_server/net/minecraft/src/ItemMap.java b/minecraft_server/net/minecraft/src/ItemMap.java
 index 3b6ec1d..1924dc8 100644
 --- a/minecraft_server/net/minecraft/src/ItemMap.java
@@ -1403,3 +1688,15 @@ index 23bd414..bd079fd 100644
  			{
  				this.performEffect(par1EntityLiving);
  			}
+diff --git a/minecraft_server/net/minecraft/src/SpawnerAnimals.java b/minecraft_server/net/minecraft/src/SpawnerAnimals.java
+index 0fc2659..0862737 100644
+--- a/minecraft_server/net/minecraft/src/SpawnerAnimals.java
++++ b/minecraft_server/net/minecraft/src/SpawnerAnimals.java
+@@ -325,6 +325,7 @@ public final class SpawnerAnimals
+ 							}
+ 
+ 							// FCMOD: Added
++							((EntityAnimal)var21).hasInteractedWithPlayer=false;
+ 							var21.PreInitCreature();
+ 							// END FCMOD
+ 							var21.setLocationAndAngles((double)var18, (double)var19, (double)var20, par6Random.nextFloat() * 360.0F, 0.0F);

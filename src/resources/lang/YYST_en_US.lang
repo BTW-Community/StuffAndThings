@@ -18,3 +18,21 @@ tile.yyBlockBrickHempWet.name=Wet Hemp Brick
 item.yyItemBrickHempDry.name=Dry Hemp Brick
 tile.yyBlockBrickHempDry.name=Dry Hemp Brick
 item.yyItemBrokenBrick.name=Broken Brick
+
+item.yyItemYarnSpinning.name=Yarn Spinning
+item.yyItemDropSpindle.name=Drop Spindle
+
+item.yyItemSpoiledMeat.name=Spoiled Meat
+item.yyItemCookedMeat.name=Cooked Meat
+
+item.yyItemChickenDecaying.name=Raw Chicken
+item.yyItemMuttonDecaying.name=Raw Mutton
+item.yyItemPorkDecaying.name=Raw Porkchop
+item.yyItemBeefDecaying.name=Raw Beef
+item.yyItemFishDecaying.name=Raw Fish
+
+item.yyItemChickenFresh.name=Fresh Chicken
+item.yyItemMuttonFresh.name=Fresh Mutton
+item.yyItemPorkFresh.name=Fresh Porkchop
+item.yyItemBeefFresh.name=Fresh Beef
+item.yyItemFishFresh.name=Fresh Fish
