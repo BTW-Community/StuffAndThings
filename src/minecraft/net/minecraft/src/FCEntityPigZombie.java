@@ -13,6 +13,47 @@ public class FCEntityPigZombie extends EntityPigZombie
 	}
 	
 	@Override
+	public void onUpdate()
+	{
+		super.onUpdate();
+		
+		if(this.angerLevel>0)
+		{
+			this.angerLevel--;
+		}
+		if(this.angerLevel==0)
+		{
+			this.entityToAttack = null;
+		}
+		
+		int x = MathHelper.floor_double(posX) + rand.nextInt(10) - 5;
+		int y = MathHelper.floor_double(posY) + rand.nextInt(10) - 5;
+		int z = MathHelper.floor_double(posZ) + rand.nextInt(10) - 5;
+		if(worldObj.getBlockId(x, y, z) == Block.fire.blockID)
+		{
+			List nearbyEntityList = worldObj.getEntitiesWithinAABBExcludingEntity( this, boundingBox.expand( 32D, 32D, 32D ) );
+				
+			Iterator nearbyEntityIterator = nearbyEntityList.iterator();
+			
+			while ( nearbyEntityIterator.hasNext() )
+			{
+				Entity tempEntity = (Entity)nearbyEntityIterator.next();
+				
+				if ( tempEntity instanceof EntityPlayer )
+				{
+					EntityPlayer player = (EntityPlayer)tempEntity;
+					
+					int blockBelow = worldObj.getBlockId(MathHelper.floor_double(posX), MathHelper.floor_double(player.posY)-1, MathHelper.floor_double(player.posZ));
+					if(blockBelow == Block.netherrack.blockID)
+					{
+						becomeAngryAt(player);
+					}
+				}
+			}
+		}
+	}
+
+	@Override
 	public boolean attackEntityFrom( DamageSource source, int iDamage )
 	{
 		// need to do super call first so that pigmen getting angry at ghasts will be overridden 
@@ -26,9 +67,11 @@ public class FCEntityPigZombie extends EntityPigZombie
 			
 			if ( attacker instanceof EntityPlayer)
 			{
+				if(angerLevel==0)
+				{
+					AngerNearbyPigmen( attacker );
+				}
 				becomeAngryAt(attacker );
-				
-				AngerNearbyPigmen( attacker );
 			}
 		}
 		
@@ -80,7 +123,7 @@ public class FCEntityPigZombie extends EntityPigZombie
 	
 			for ( int iTempCount = 0; iTempCount < iNuggetCount; iTempCount++ )
 			{
-				dropItem( Item.goldNugget.itemID, 1 );
+				dropItem( FCBetterThanWolves.fcItemChunkGoldOre.itemID, 1 );
 			}
 		}
 	}

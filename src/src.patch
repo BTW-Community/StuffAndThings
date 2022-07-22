@@ -1,3 +1,32 @@
+diff --git a/minecraft/net/minecraft/src/Entity.java b/minecraft/net/minecraft/src/Entity.java
+index fb35e3d..926bade 100644
+--- a/minecraft/net/minecraft/src/Entity.java
++++ b/minecraft/net/minecraft/src/Entity.java
+@@ -147,7 +147,7 @@ public abstract class Entity
+ 	 * The amount of ticks you have to stand inside of fire before be set on fire
+ 	 */
+ 	public int fireResistance;
+-	private int fire;
++	public int fire;
+ 
+ 	/**
+ 	 * Whether this entity is currently inside of water (if it handles water movement that is)
+@@ -416,6 +416,15 @@ public abstract class Entity
+ 	 */
+ 	public void onUpdate()
+ 	{
++		if(fire>0)
++		{
++			FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++			MathHelper.floor_double(posY), MathHelper.floor_double( posZ));
++			if ( fire > 0 && worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
++			{
++				worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
++			}
++		}
+ 		this.onEntityUpdate();
+ 	}
+ 
 diff --git a/minecraft/net/minecraft/src/EntityAnimal.java b/minecraft/net/minecraft/src/EntityAnimal.java
 index 393dc08..9da24e3 100644
 --- a/minecraft/net/minecraft/src/EntityAnimal.java
@@ -95,6 +124,23 @@ index 393dc08..9da24e3 100644
  		if ( heldItem != null )
  		{
  			if ( IsEdibleItem( heldItem ) )
+diff --git a/minecraft/net/minecraft/src/EntityArrow.java b/minecraft/net/minecraft/src/EntityArrow.java
+index 68e0da5..3d5156a 100644
+--- a/minecraft/net/minecraft/src/EntityArrow.java
++++ b/minecraft/net/minecraft/src/EntityArrow.java
+@@ -172,6 +172,12 @@ public class EntityArrow extends Entity implements IProjectile
+ 	public void onUpdate()
+ 	{
+ 		super.onUpdate();
++		FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++		MathHelper.floor_double(posY), MathHelper.floor_double( posZ));
++		if ( fire > 0 && worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
++		{
++			worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
++		}
+ 
+ 		if (this.prevRotationPitch == 0.0F && this.prevRotationYaw == 0.0F)
+ 		{
 diff --git a/minecraft/net/minecraft/src/EntityCreeper.java b/minecraft/net/minecraft/src/EntityCreeper.java
 index 5252d4f..ce30c71 100644
 --- a/minecraft/net/minecraft/src/EntityCreeper.java
@@ -113,6 +159,24 @@ index 5252d4f..ce30c71 100644
  					}
  
  					this.setDead();
+diff --git a/minecraft/net/minecraft/src/EntityFireball.java b/minecraft/net/minecraft/src/EntityFireball.java
+index ffdc798..caeabd6 100644
+--- a/minecraft/net/minecraft/src/EntityFireball.java
++++ b/minecraft/net/minecraft/src/EntityFireball.java
+@@ -76,6 +76,13 @@ public abstract class EntityFireball extends Entity
+ 		}
+ 		else
+ 		{
++			FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++			MathHelper.floor_double(boundingBox.maxY), MathHelper.floor_double( posZ));
++			if (worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
++			{
++				worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
++			}
++			
+ 			super.onUpdate();
+ 			this.setFire(1);
+ 
 diff --git a/minecraft/net/minecraft/src/EntityFishHook.java b/minecraft/net/minecraft/src/EntityFishHook.java
 index b732510..68fb886 100644
 --- a/minecraft/net/minecraft/src/EntityFishHook.java
@@ -254,11 +318,45 @@ index 98e5268..ef8f911 100644
  		}
  	}
  	
+diff --git a/minecraft/net/minecraft/src/EntityPigZombie.java b/minecraft/net/minecraft/src/EntityPigZombie.java
+index 2996f13..0cbfbbf 100644
+--- a/minecraft/net/minecraft/src/EntityPigZombie.java
++++ b/minecraft/net/minecraft/src/EntityPigZombie.java
+@@ -8,7 +8,7 @@ public class EntityPigZombie extends FCEntityZombie
+ // END FCMOD
+ {
+ 	/** Above zero if this PigZombie is Angry. */
+-	private int angerLevel = 0;
++	protected int angerLevel = 0;
+ 
+ 	/** A random delay until this PigZombie next makes a sound. */
+ 	private int randomSoundDelay = 0;
 diff --git a/minecraft/net/minecraft/src/EntityPlayer.java b/minecraft/net/minecraft/src/EntityPlayer.java
-index 2d298d0..d787bd3 100644
+index 3d2d78d..b5efc6a 100644
 --- a/minecraft/net/minecraft/src/EntityPlayer.java
 +++ b/minecraft/net/minecraft/src/EntityPlayer.java
-@@ -130,7 +130,33 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1,9 +1,6 @@
+ package net.minecraft.src;
+ 
+ import java.io.InputStreamReader;
+-import java.lang.reflect.Field;
+-import java.lang.reflect.InvocationTargetException;
+-import java.lang.reflect.Method;
+ import java.net.HttpURLConnection;
+ import java.net.URL;
+ import java.util.Collection;
+@@ -113,10 +110,6 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 * An instance of a fishing rod's hook. If this isn't null, the icon image of the fishing rod is slightly different
+ 	 */
+ 	public EntityFishHook fishEntity = null;
+-	
+-	//Dynamic Lights TODO
+-	private int dynamicLightUpdateTimer=0;
+-	public boolean isholdingtorch =false;
+ 
+ 	public EntityPlayer(World par1World)
+ 	{
+@@ -137,7 +130,33 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  
  	public int getMaxHealth()
  	{
@@ -293,7 +391,7 @@ index 2d298d0..d787bd3 100644
  	}
  
  	protected void entityInit()
-@@ -152,6 +178,8 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -159,6 +178,8 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		dataWatcher.addObject( m_iSpawnChunksVisualizationLocationIDataWatcherID, new Integer( 0 ) );
  		dataWatcher.addObject( m_iSpawnChunksVisualizationLocationJDataWatcherID, new Integer( 0 ) );
  		dataWatcher.addObject( m_iSpawnChunksVisualizationLocationKDataWatcherID, new Integer( 0 ) );
@@ -302,21 +400,79 @@ index 2d298d0..d787bd3 100644
  		// END FCMOD
  	}
  
-@@ -363,6 +391,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -370,49 +391,27 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		// FCMOD: Added
  		UpdateModStatusVariables();
  		// END FCMOD
-+		if(!worldObj.isRemote)
-+		{
-+			for(ItemStack stack : YYMeatDecay.decayMeatInInventory(inventory, rand, 0, 35))
-+			{
-+				FCUtilsItem.EjectStackWithRandomVelocity(worldObj, posX, posY, posZ, stack);
-+			}
-+		}
+-		//Dynamic Lights TODO
+-		if (!worldObj.isRemote)
++
++		if (isholdingtorch())
+ 		{
+-			dynamicLightUpdateTimer++;
+-			if (isholdingtorch ||dynamicLightUpdateTimer >9)
++			FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++			MathHelper.floor_double(boundingBox.maxY), MathHelper.floor_double( posZ));
++			if (worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
+ 			{
+-				ItemStack heldItem = getHeldItem();
+-				dynamicLightUpdateTimer=0;
+-				if (heldItem!= null && isDynamicLightSource(heldItem.itemID))
+-				{
+-					isholdingtorch =true;
+-//        			System.out.println(this + " is holding " + getHeldItem());
+-				}
+-				else
+-				{
+-					isholdingtorch =false;
+-				}
+-				
+-				if (isholdingtorch) 
+-				{
+-					FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ), 
+-							MathHelper.floor_double(boundingBox.maxY), MathHelper.floor_double( posZ));
+-					if (worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
+-					{
+ 					worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
+-					worldObj.scheduleBlockUpdate(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID, DLLightSource.lightSourceTickRate);
+-					}
+-				}
+ 			}
+ 		}
+-
  	}
+-	
+-	public boolean isDynamicLightSource(int itemID)
++
++	public boolean isholdingtorch()
+ 	{
+-//    	Block.blocksList[itemID].lightValue>0 TODO
+-		if(itemID==FCBetterThanWolves.fcBlockTorchNetherBurning.blockID || itemID==FCBetterThanWolves.fcBlockTorchFiniteBurning.blockID)
+-		{
+-			return true;
+-		}
+-		return false;
++		ItemStack held = getHeldItem();
++		if(held==null) return false;
++		int itemID = getHeldItem().itemID;
++		return itemID==FCBetterThanWolves.fcBlockTorchNetherBurning.blockID ||
++				itemID==FCBetterThanWolves.fcBlockTorchFiniteBurning.blockID ||
++				itemID==YYStuffAndThings.yyBlockTorchSparklingBurning.blockID;
+ 	}
+-	
  
  	/**
-@@ -959,6 +994,20 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 * Return the amount of time this entity should stay in a portal before being transported.
+@@ -594,7 +593,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 			--this.flyToggleTimer;
+ 		}
+ 
+-		if (this.worldObj.difficultySetting == 0 && this.getHealth() < this.getMaxHealth() && this.ticksExisted % 20 * 12 == 0)
++		if (this.worldObj.difficultySetting == 0 && this.getHealth() < this.getMaxHealth() && this.ticksExisted % 20 * 10 == 0)
+ 		{
+ 			this.heal(1);
+ 		}
+@@ -1008,6 +1007,19 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 */
  	public boolean attackEntityFrom(DamageSource par1DamageSource, int par2)
  	{
@@ -333,15 +489,13 @@ index 2d298d0..d787bd3 100644
 +			par2 = (int)(par2 * 3.5);
 +		}
 +		
-+		
  		if (this.isEntityInvulnerable())
  		{
  			return false;
-@@ -1141,6 +1190,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
- 			this.field_94063_bt.func_94547_a(par1DamageSource, var3, par2);
+@@ -1191,6 +1203,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		}
  	}
-+	
+ 
 +	protected int applyArmorCalculations(DamageSource source, int damage)
 +	{
 +		if(!source.isUnblockable())
@@ -351,10 +505,11 @@ index 2d298d0..d787bd3 100644
 +		}
 +		return damage;
 +	}
- 
++	
  	/**
  	 * Displays the furnace GUI for the passed in furnace entity. Args: tileEntityFurnace
-@@ -2099,7 +2158,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 */
+@@ -2148,7 +2170,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  			return false;
  		}
  		// END FCMOD
@@ -363,7 +518,76 @@ index 2d298d0..d787bd3 100644
  	}
  
  	/**
-@@ -2415,11 +2474,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2221,49 +2243,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	public boolean canPlayerEdit(int par1, int par2, int par3, int par4, ItemStack par5ItemStack)
+ 	{
+ 		// FCMOD: Code added to prevent the player from placing blocks while in mid air
+-		boolean disableHardcoreBouncing = false;
+-
+-		try {
+-			Class decoManagerClass;
+-
+-			if (FCUtilsReflection.isObfuscated()) {
+-				decoManagerClass = Class.forName("net.minecraft.src.DecoManager");
+-			}
+-			else {
+-				decoManagerClass = Class.forName("DecoManager");
+-			}
+-
+-			Method decoInstanceGetter = decoManagerClass.getDeclaredMethod("getInstance");
+-			FCAddOn decoInstance = (FCAddOn) decoInstanceGetter.invoke(null);
+-
+-			Field disableHarcoreBouncingField = decoManagerClass.getDeclaredField("disableHardcoreBouncing");
+-			disableHardcoreBouncing = (Boolean) disableHarcoreBouncingField.get(decoInstance);
+-		} catch (ClassNotFoundException e) {
+-
+-		} catch (NoSuchMethodException e) {
+-			e.printStackTrace();
+-		} catch (SecurityException e) {
+-			e.printStackTrace();
+-		} catch (IllegalAccessException e) {
+-			e.printStackTrace();
+-		} catch (IllegalArgumentException e) {
+-			e.printStackTrace();
+-		} catch (InvocationTargetException e) {
+-			e.printStackTrace();
+-		} catch (NoSuchFieldException e) {
+-			e.printStackTrace();
+-		}
+-		
+-		if (disableHardcoreBouncing) {
+-			if (!capabilities.isCreativeMode && !onGround && !inWater && !isOnLadder() && ridingEntity == null && !handleLavaMovement())
+-			{
+-				return false;
+-			}
++		if ( !capabilities.isCreativeMode && !onGround && !inWater && !isOnLadder() && ridingEntity == null && !handleLavaMovement() )
++		{
++			return FCBetterThanWolves.allowPlaceWhileJumping;
+ 		}
+ 		// END FCMOD
+-
++		
+ 		return this.capabilities.allowEdit ? true : (par5ItemStack != null ? par5ItemStack.func_82835_x() : false);
+ 	}
++
+ 	/**
+ 	 * Get the experience points the entity currently has.
+ 	 */
+@@ -2317,6 +2305,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 */
+ 	public void clonePlayer(EntityPlayer par1EntityPlayer, boolean par2)
+ 	{
++		this.numberOfDeaths = par1EntityPlayer.numberOfDeaths;
++		this.setMaxHealth(par1EntityPlayer.getMaxHealth());
++		this.setMaxFood(par1EntityPlayer.getMaxFood());
++		if(!par2)
++		{
++			this.numberOfDeaths++;
++		}
+ 		if (par2)
+ 		{
+ 			this.inventory.copyInventory(par1EntityPlayer.inventory);
+@@ -2498,11 +2493,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	private static final int m_iSpawnChunksVisualizationLocationJDataWatcherID = 30;
  	private static final int m_iSpawnChunksVisualizationLocationKDataWatcherID = 31;
  	
@@ -379,7 +603,7 @@ index 2d298d0..d787bd3 100644
  	protected void ReadModDataFromNBT( NBTTagCompound tag )
  	{
  		if ( tag.hasKey( "fcTimeOfLastSpawnAssignment" ) )
-@@ -2451,6 +2514,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2534,6 +2533,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		{
  			m_iInGloomCounter = tag.getInteger( "fcGloomCounter" );
  		}
@@ -396,7 +620,7 @@ index 2d298d0..d787bd3 100644
  	}
  	
  	protected void WriteModDataToNBT( NBTTagCompound tag )
-@@ -2470,6 +2543,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2553,6 +2562,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 	
  	 	tag.setInteger( "fcGloomLevel", GetGloomLevel() );
  	 	tag.setInteger( "fcGloomCounter", m_iInGloomCounter );
@@ -406,7 +630,7 @@ index 2d298d0..d787bd3 100644
  	}
  	
  	@Override
-@@ -2542,13 +2618,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2625,13 +2637,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	@Override
  	public boolean CanJump()
  	{		
@@ -422,7 +646,31 @@ index 2d298d0..d787bd3 100644
  	}
  	
  	@Override
-@@ -2760,7 +2836,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2776,7 +2788,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	{
+ 		float fModifier = GetHealthAndExhaustionModifier();
+ 		
+-		if ( GetGloomLevel() > 0 )
++		if (GetGloomLevel() > 0 && !this.capabilities.isCreativeMode)
+ 		{
+ 			fModifier *= 0.5F;
+ 		}
+@@ -2799,7 +2811,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	@Override
+ 	protected float GetLadderVerticalMovementModifier()
+ 	{
+-		return GetHealthAndExhaustionModifierWithSightlessModifier();
++		float modifier = GetHealthAndExhaustionModifierWithSightlessModifier(); 
++		
++		if (this.isUsingItem()) {
++			modifier *= 0.5F;
++		}
++		
++		return modifier;
+ 	}    
+ 	
+ 	protected float GetJumpingHorizontalMovementModifier()        
+@@ -2843,11 +2861,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	
  	public boolean HasStatusPenalty()
  	{
@@ -431,7 +679,15 @@ index 2d298d0..d787bd3 100644
  	}
  	
  	public int GetMaximumStatusPenaltyLevel()
-@@ -3255,13 +3331,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	{
++		if (this.capabilities.isCreativeMode) {
++			return 0;
++		}
++		
+ 		int iMaximumPenaltyLevel = GetHealthPenaltyLevel();
+ 		int iHungerPenaltyLevel = GetHungerPenaltyLevel();
+ 		
+@@ -3338,13 +3360,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	protected boolean IsPlayerHoldingSail()
  	{
  		ItemStack currentItemStack = inventory.mainInventory[inventory.currentItem];
@@ -456,10 +712,18 @@ index 2d298d0..d787bd3 100644
  	
  	@Override
 diff --git a/minecraft/net/minecraft/src/EntityPlayerMP.java b/minecraft/net/minecraft/src/EntityPlayerMP.java
-index c47163d..451f9ad 100644
+index a2e44cc..7231f05 100644
 --- a/minecraft/net/minecraft/src/EntityPlayerMP.java
 +++ b/minecraft/net/minecraft/src/EntityPlayerMP.java
-@@ -1180,7 +1180,7 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+@@ -1173,14 +1173,14 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+ 	
+ 	private void UpdateHealthAndHungerEffects()
+ 	{
+-		if ( !isDead && ( worldObj.getTotalWorldTime() + (long)entityId ) % 80L == 0L && !this.capabilities.isCreativeMode )
++		if ( !isDead && ( worldObj.getTotalWorldTime() + (long)entityId ) % 80L == 0L )
+ 		{
+ 			if ( foodStats.getFoodLevel() <= 0 && foodStats.getSaturationLevel() <= 0F )
+ 			{
  				addPotionEffect( new PotionEffect( Potion.confusion.getId(), 180, 0, true ) );                            
  			}
  			
@@ -468,14 +732,23 @@ index c47163d..451f9ad 100644
  			{
  				addPotionEffect( new PotionEffect( Potion.blindness.getId(), 180, 0, true ) );                            
  			}
-@@ -1246,87 +1246,19 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+@@ -1192,7 +1192,7 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+ 	{
+ 		if ( !isDead )
+ 		{
+-			if ( IsInGloom() && !this.capabilities.isCreativeMode )
++			if ( IsInGloom() )
+ 			{
+ 				m_iInGloomCounter++;
+ 				
+@@ -1246,94 +1246,26 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
  	@Override
  	protected void UpdateFatPenaltyLevel()
  	{
 -		int iFat = (int)foodStats.getSaturationLevel();
 -		int iFatLevel = 4;
 -		
--		if ( iFat < 12 )
+-		if ( iFat < 12 || this.capabilities.isCreativeMode)
 -		{
 -			iFatLevel = 0;
 -		}
@@ -502,7 +775,7 @@ index c47163d..451f9ad 100644
 -		int iHunger = foodStats.getFoodLevel();
 -		int iPenaltyLevel = 5;
 -		
--		if ( iHunger > 24 )
+-		if ( iHunger > 24 || this.capabilities.isCreativeMode )
 -		{
 -			iPenaltyLevel = 0;
 -		}
@@ -533,7 +806,7 @@ index c47163d..451f9ad 100644
 -		int iHealth = getHealth();
 -		int iPenaltyLevel = 5;
 -		
--		if ( iHealth > 10 )
+-		if ( iHealth > 10 || this.capabilities.isCreativeMode )
 -		{
 -			iPenaltyLevel = 0;
 -		}
@@ -559,6 +832,27 @@ index c47163d..451f9ad 100644
  	}
  	
  	private boolean IsInGloom()
+ 	{
+ 		if ( !capabilities.disableDamage ) // disable darkness effects in creative
+ 		{
+-			if ( !isPotionActive( Potion.nightVision ) && worldObj.provider.dimensionId == 0 )
++			if ( !isPotionActive( Potion.nightVision ) && (worldObj.provider.dimensionId == 0 || worldObj.provider.dimensionId == -1) )
+ 			{
+ 				int i = MathHelper.floor_double( posX );
+ 				int j = MathHelper.floor_double( posY - yOffset );
+diff --git a/minecraft/net/minecraft/src/EntityRenderer.java b/minecraft/net/minecraft/src/EntityRenderer.java
+index 3b51e36..4ae8d6a 100644
+--- a/minecraft/net/minecraft/src/EntityRenderer.java
++++ b/minecraft/net/minecraft/src/EntityRenderer.java
+@@ -2068,7 +2068,7 @@ public class EntityRenderer
+ 		
+ 		if ( world != null )
+ 		{
+-			if ( world.provider.dimensionId == 0 )
++			if ( world.provider.dimensionId == 0 || world.provider.dimensionId == -1 )
+ 			{
+ 				// isolating the overworld for gloom effects
+ 				
 diff --git a/minecraft/net/minecraft/src/FoodStats.java b/minecraft/net/minecraft/src/FoodStats.java
 index dcff638..7e54e56 100644
 --- a/minecraft/net/minecraft/src/FoodStats.java
@@ -912,6 +1206,119 @@ index 0fc2659..0862737 100644
  							var21.PreInitCreature();
  							// END FCMOD
  							var21.setLocationAndAngles((double)var18, (double)var19, (double)var20, par6Random.nextFloat() * 360.0F, 0.0F);
+diff --git a/minecraft/net/minecraft/src/Teleporter.java b/minecraft/net/minecraft/src/Teleporter.java
+index 433266c..2c7015d 100644
+--- a/minecraft/net/minecraft/src/Teleporter.java
++++ b/minecraft/net/minecraft/src/Teleporter.java
+@@ -73,7 +73,7 @@ public class Teleporter
+ 	 */
+ 	public boolean placeInExistingPortal(Entity par1Entity, double par2, double par4, double par6, float par8)
+ 	{
+-		short var9 = 128;
++		int var9 = par1Entity.dimension==-1 ? 20 : 160;
+ 		double var10 = -1.0D;
+ 		int var12 = 0;
+ 		int var13 = 0;
+diff --git a/minecraft/net/minecraft/src/WorldGenFire.java b/minecraft/net/minecraft/src/WorldGenFire.java
+index 7743bc7..b5910f0 100644
+--- a/minecraft/net/minecraft/src/WorldGenFire.java
++++ b/minecraft/net/minecraft/src/WorldGenFire.java
+@@ -6,18 +6,6 @@ public class WorldGenFire extends WorldGenerator
+ {
+ 	public boolean generate(World par1World, Random par2Random, int par3, int par4, int par5)
+ 	{
+-		for (int var6 = 0; var6 < 64; ++var6)
+-		{
+-			int var7 = par3 + par2Random.nextInt(8) - par2Random.nextInt(8);
+-			int var8 = par4 + par2Random.nextInt(4) - par2Random.nextInt(4);
+-			int var9 = par5 + par2Random.nextInt(8) - par2Random.nextInt(8);
+-
+-			if (par1World.isAirBlock(var7, var8, var9) && par1World.getBlockId(var7, var8 - 1, var9) == Block.netherrack.blockID)
+-			{
+-				par1World.setBlock(var7, var8, var9, Block.fire.blockID, 0, 2);
+-			}
+-		}
+-
+ 		return true;
+ 	}
+ }
+diff --git a/minecraft/net/minecraft/src/WorldProviderHell.java b/minecraft/net/minecraft/src/WorldProviderHell.java
+index d9c3bf5..5066218 100644
+--- a/minecraft/net/minecraft/src/WorldProviderHell.java
++++ b/minecraft/net/minecraft/src/WorldProviderHell.java
+@@ -28,32 +28,7 @@ public class WorldProviderHell extends WorldProvider
+ 	 */
+ 	public Vec3 getFogColor(float par1, float par2, int x, int y, int z)
+ 	{
+-		BiomeGenBase biome =  this.worldObj.getBiomeGenForCoords(x, z);
+-		
+-		if (biome instanceof BTABiomeGenNetherBase) {
+-			Vec3[][] biomeColors = new Vec3[5][5];
+-			
+-			for (int i = 0; i < 5; i++) {
+-				for (int j = 0; j < 5; j++) {
+-					biomeColors[i][j] = ((BTABiomeGenNetherBase) this.worldObj.getBiomeGenForCoords(x - 2 + i, z - 2 + j)).getFogColor(this.worldObj);
+-				}
+-			}
+-			
+-			Vec3 color = this.worldObj.getWorldVec3Pool().getVecFromPool(0, 0, 0);
+-			
+-			for (int i = 0; i < 5; i++) {
+-				for (int j = 0; j < 5; j++) {
+-					color.xCoord += biomeColors[i][j].xCoord / 25;
+-					color.yCoord += biomeColors[i][j].yCoord / 25;
+-					color.zCoord += biomeColors[i][j].zCoord / 25;
+-				}
+-			}
+-			
+-			return color;
+-		}
+-		else {
+-			return this.worldObj.getWorldVec3Pool().getVecFromPool(0.2, 0.03, 0.03);
+-		}
++		return this.worldObj.getWorldVec3Pool().getVecFromPool(0.0, 0.0, 0.0);
+ 	}
+ 
+ 	/**
+@@ -61,7 +36,7 @@ public class WorldProviderHell extends WorldProvider
+ 	 */
+ 	protected void generateLightBrightnessTable()
+ 	{
+-		float var1 = 0.1F;
++		float var1 = 0.0F;
+ 
+ 		for (int var2 = 0; var2 <= 15; ++var2)
+ 		{
+
+diff --git a/minecraft_server/net/minecraft/src/Entity.java b/minecraft_server/net/minecraft/src/Entity.java
+index b5249a5..f2e286e 100644
+--- a/minecraft_server/net/minecraft/src/Entity.java
++++ b/minecraft_server/net/minecraft/src/Entity.java
+@@ -147,7 +147,7 @@ public abstract class Entity
+ 	 * The amount of ticks you have to stand inside of fire before be set on fire
+ 	 */
+ 	public int fireResistance;
+-	private int fire;
++	public int fire;
+ 
+ 	/**
+ 	 * Whether this entity is currently inside of water (if it handles water movement that is)
+@@ -357,6 +357,15 @@ public abstract class Entity
+ 	 */
+ 	public void onUpdate()
+ 	{
++		if(fire>0)
++		{
++			FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++			MathHelper.floor_double(posY), MathHelper.floor_double( posZ));
++			if ( fire > 0 && worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
++			{
++				worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
++			}
++		}
+ 		this.onEntityUpdate();
+ 	}
+ 
 diff --git a/minecraft_server/net/minecraft/src/EntityAnimal.java b/minecraft_server/net/minecraft/src/EntityAnimal.java
 index 0c76d32..53f46d2 100644
 --- a/minecraft_server/net/minecraft/src/EntityAnimal.java
@@ -1010,6 +1417,24 @@ index 0c76d32..53f46d2 100644
  		if ( heldItem != null )
  		{
  			if ( IsEdibleItem( heldItem ) )
+diff --git a/minecraft_server/net/minecraft/src/EntityArrow.java b/minecraft_server/net/minecraft/src/EntityArrow.java
+index ad86fc2..579f0a2 100644
+--- a/minecraft_server/net/minecraft/src/EntityArrow.java
++++ b/minecraft_server/net/minecraft/src/EntityArrow.java
+@@ -141,7 +141,12 @@ public class EntityArrow extends Entity implements IProjectile
+ 	public void onUpdate()
+ 	{
+ 		super.onUpdate();
+-
++		FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++		MathHelper.floor_double(posY), MathHelper.floor_double( posZ));
++		if (fire > 0 && worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
++		{
++			worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
++		}
+ 		if (this.prevRotationPitch == 0.0F && this.prevRotationYaw == 0.0F)
+ 		{
+ 			float var1 = MathHelper.sqrt_double(this.motionX * this.motionX + this.motionZ * this.motionZ);
 diff --git a/minecraft_server/net/minecraft/src/EntityCreeper.java b/minecraft_server/net/minecraft/src/EntityCreeper.java
 index fcd0429..d1e3c7e 100644
 --- a/minecraft_server/net/minecraft/src/EntityCreeper.java
@@ -1028,6 +1453,24 @@ index fcd0429..d1e3c7e 100644
  					}
  
  					this.setDead();
+diff --git a/minecraft_server/net/minecraft/src/EntityFireball.java b/minecraft_server/net/minecraft/src/EntityFireball.java
+index a4d2f3a..542c320 100644
+--- a/minecraft_server/net/minecraft/src/EntityFireball.java
++++ b/minecraft_server/net/minecraft/src/EntityFireball.java
+@@ -65,6 +65,13 @@ public abstract class EntityFireball extends Entity
+ 		}
+ 		else
+ 		{
++			FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++			MathHelper.floor_double(boundingBox.maxY), MathHelper.floor_double( posZ));
++			if (worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
++			{
++				worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
++			}
++			
+ 			super.onUpdate();
+ 			this.setFire(1);
+ 
 diff --git a/minecraft_server/net/minecraft/src/EntityFishHook.java b/minecraft_server/net/minecraft/src/EntityFishHook.java
 index 48e1ea5..89926f8 100644
 --- a/minecraft_server/net/minecraft/src/EntityFishHook.java
@@ -1167,11 +1610,44 @@ index 4fad945..602199e 100644
  		}
  	}
  	
+diff --git a/minecraft_server/net/minecraft/src/EntityPigZombie.java b/minecraft_server/net/minecraft/src/EntityPigZombie.java
+index 9c77c90..e462dee 100644
+--- a/minecraft_server/net/minecraft/src/EntityPigZombie.java
++++ b/minecraft_server/net/minecraft/src/EntityPigZombie.java
+@@ -8,7 +8,7 @@ public class EntityPigZombie extends FCEntityZombie
+ // END FCMOD
+ {
+ 	/** Above zero if this PigZombie is Angry. */
+-	private int angerLevel = 0;
++	protected int angerLevel = 0;
+ 
+ 	/** A random delay until this PigZombie next makes a sound. */
+ 	private int randomSoundDelay = 0;
 diff --git a/minecraft_server/net/minecraft/src/EntityPlayer.java b/minecraft_server/net/minecraft/src/EntityPlayer.java
-index 88dfbc4..f0f1e8c 100644
+index 593f682..9a907c1 100644
 --- a/minecraft_server/net/minecraft/src/EntityPlayer.java
 +++ b/minecraft_server/net/minecraft/src/EntityPlayer.java
-@@ -118,7 +118,33 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1,8 +1,5 @@
+ package net.minecraft.src;
+ 
+-import java.lang.reflect.Field;
+-import java.lang.reflect.InvocationTargetException;
+-import java.lang.reflect.Method;
+ import java.util.Collection;
+ import java.util.Iterator;
+ import java.util.List;
+@@ -101,10 +98,6 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 * An instance of a fishing rod's hook. If this isn't null, the icon image of the fishing rod is slightly different
+ 	 */
+ 	public EntityFishHook fishEntity = null;
+-	
+-	//Dynamic Lights TODO
+-	private int dynamicLightUpdateTimer=0;
+-	public boolean isholdingtorch =false;
+ 
+ 	public EntityPlayer(World par1World)
+ 	{
+@@ -125,7 +118,33 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  
  	public int getMaxHealth()
  	{
@@ -1206,7 +1682,7 @@ index 88dfbc4..f0f1e8c 100644
  	}
  
  	protected void entityInit()
-@@ -140,6 +166,8 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -147,6 +166,8 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		dataWatcher.addObject( m_iSpawnChunksVisualizationLocationIDataWatcherID, new Integer( 0 ) );
  		dataWatcher.addObject( m_iSpawnChunksVisualizationLocationJDataWatcherID, new Integer( 0 ) );
  		dataWatcher.addObject( m_iSpawnChunksVisualizationLocationKDataWatcherID, new Integer( 0 ) );
@@ -1215,21 +1691,80 @@ index 88dfbc4..f0f1e8c 100644
  		// END FCMOD
  	}
  
-@@ -334,6 +362,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -341,48 +362,29 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		// FCMOD: Added
  		UpdateModStatusVariables();
  		// END FCMOD
-+		if(!worldObj.isRemote)
-+		{
-+			for(ItemStack stack : YYMeatDecay.decayMeatInInventory(inventory, rand, 0, 35))
-+			{
-+				FCUtilsItem.EjectStackWithRandomVelocity(worldObj, posX, posY, posZ, stack);
-+			}
-+		}
+-		//Dynamic Lights TODO
+-		if (!worldObj.isRemote)
++		
++		if (isholdingtorch())
+ 		{
+-			dynamicLightUpdateTimer++;
+-			if (isholdingtorch ||dynamicLightUpdateTimer >9)
++			FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ),
++			MathHelper.floor_double(boundingBox.maxY), MathHelper.floor_double( posZ));
++			if (worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
+ 			{
+-				ItemStack heldItem = getHeldItem();
+-				dynamicLightUpdateTimer=0;
+-				if (heldItem!= null && isDynamicLightSource(heldItem.itemID))
+-				{
+-					isholdingtorch =true;
+-//        			System.out.println(this + " is holding " + getHeldItem());
+-				}
+-				else
+-				{
+-					isholdingtorch =false;
+-				}
+-				
+-				if (isholdingtorch) 
+-				{
+-					FCUtilsBlockPos lightpos = new FCUtilsBlockPos(MathHelper.floor_double( posX ), 
+-							MathHelper.floor_double(boundingBox.maxY), MathHelper.floor_double( posZ));
+-					if (worldObj.getBlockId(lightpos.i, lightpos.j, lightpos.k)==0)
+-					{
+ 					worldObj.setBlock(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID,0 ,2);
+-					worldObj.scheduleBlockUpdate(lightpos.i, lightpos.j, lightpos.k, DLMain.lightsourceinvis.blockID, DLLightSource.lightSourceTickRate);
+-					}
+-				}
+ 			}
+ 		}
  	}
- 
+-
+-	public boolean isDynamicLightSource(int itemID)
++	
++	public boolean isholdingtorch()
+ 	{
+-//    	Block.blocksList[itemID].lightValue>0 TODO
+-		if(itemID==FCBetterThanWolves.fcBlockTorchNetherBurning.blockID || itemID==FCBetterThanWolves.fcBlockTorchFiniteBurning.blockID)
+-		{
+-			return true;
+-		}
+-		return false;
++		ItemStack held = getHeldItem();
++		if(held==null) return false;
++		int itemID = getHeldItem().itemID;
++		return itemID==FCBetterThanWolves.fcBlockTorchNetherBurning.blockID ||
++				itemID==FCBetterThanWolves.fcBlockTorchFiniteBurning.blockID ||
++				itemID==YYStuffAndThings.yyBlockTorchSparklingBurning.blockID;
+ 	}
+-	
++
++
  	/**
-@@ -905,6 +940,20 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 * Return the amount of time this entity should stay in a portal before being transported.
+ 	 */
+@@ -538,7 +540,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 			--this.flyToggleTimer;
+ 		}
+ 
+-		if (this.worldObj.difficultySetting == 0 && this.getHealth() < this.getMaxHealth() && this.ticksExisted % 20 * 12 == 0)
++		if (this.worldObj.difficultySetting == 0 && this.getHealth() < this.getMaxHealth() && this.ticksExisted % 20 * 10 == 0)
+ 		{
+ 			this.heal(1);
+ 		}
+@@ -952,6 +954,19 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 */
  	public boolean attackEntityFrom(DamageSource par1DamageSource, int par2)
  	{
@@ -1246,11 +1781,10 @@ index 88dfbc4..f0f1e8c 100644
 +			par2 = (int)(par2 * 3.5);
 +		}
 +		
-+		
  		if (this.isEntityInvulnerable())
  		{
  			return false;
-@@ -1087,6 +1136,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1134,6 +1149,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		}
  	}
  
@@ -1267,7 +1801,7 @@ index 88dfbc4..f0f1e8c 100644
  	/**
  	 * Displays the furnace GUI for the passed in furnace entity. Args: tileEntityFurnace
  	 */
-@@ -1950,7 +2009,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -1997,7 +2022,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  			return false;
  		}
  		// END FCMOD
@@ -1276,7 +1810,81 @@ index 88dfbc4..f0f1e8c 100644
  	}
  
  	/**
-@@ -2246,11 +2305,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2067,55 +2092,18 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 		}
+ 	}
+ 
+-
+ 	public boolean canPlayerEdit(int par1, int par2, int par3, int par4, ItemStack par5ItemStack)
+ 	{
+ 		// FCMOD: Code added to prevent the player from placing blocks while in mid air
+-		boolean disableHardcoreBouncing = false;
+-
+-		try {
+-			Class decoManagerClass;
+-
+-			if (FCUtilsReflection.isObfuscated()) {
+-				decoManagerClass = Class.forName("net.minecraft.src.DecoManager");
+-			}
+-			else {
+-				decoManagerClass = Class.forName("DecoManager");
+-			}
+-
+-			Method decoInstanceGetter = decoManagerClass.getDeclaredMethod("getInstance");
+-			FCAddOn decoInstance = (FCAddOn) decoInstanceGetter.invoke(null);
+-
+-			Field disableHarcoreBouncingField = decoManagerClass.getDeclaredField("disableHardcoreBouncing");
+-			disableHardcoreBouncing = (Boolean) disableHarcoreBouncingField.get(decoInstance);
+-		} catch (ClassNotFoundException e) {
+-
+-		} catch (NoSuchMethodException e) {
+-			e.printStackTrace();
+-		} catch (SecurityException e) {
+-			e.printStackTrace();
+-		} catch (IllegalAccessException e) {
+-			e.printStackTrace();
+-		} catch (IllegalArgumentException e) {
+-			e.printStackTrace();
+-		} catch (InvocationTargetException e) {
+-			e.printStackTrace();
+-		} catch (NoSuchFieldException e) {
+-			e.printStackTrace();
+-		}
+-		
+-		if (disableHardcoreBouncing) {
+-			if (!capabilities.isCreativeMode && !onGround && !inWater && !isOnLadder() && ridingEntity == null && !handleLavaMovement())
+-			{
+-				return false;
+-			}
++		if ( !capabilities.isCreativeMode && !onGround && !inWater && !isOnLadder() && ridingEntity == null && !handleLavaMovement() )
++		{
++			return FCBetterThanWolves.allowPlaceWhileJumping;
+ 		}
+ 		// END FCMOD
+-
++		
+ 		return this.capabilities.allowEdit ? true : (par5ItemStack != null ? par5ItemStack.func_82835_x() : false);
+ 	}
+ 
+-
+ 	/**
+ 	 * Get the experience points the entity currently has.
+ 	 */
+@@ -2164,6 +2152,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	 */
+ 	public void clonePlayer(EntityPlayer par1EntityPlayer, boolean par2)
+ 	{
++		this.numberOfDeaths = par1EntityPlayer.numberOfDeaths;
++		this.setMaxHealth(par1EntityPlayer.getMaxHealth());
++		this.setMaxFood(par1EntityPlayer.getMaxFood());
++		if(!par2)
++		{
++			this.numberOfDeaths++;
++		}
+ 		if (par2)
+ 		{
+ 			this.inventory.copyInventory(par1EntityPlayer.inventory);
+@@ -2330,11 +2325,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	private static final int m_iSpawnChunksVisualizationLocationJDataWatcherID = 30;
  	private static final int m_iSpawnChunksVisualizationLocationKDataWatcherID = 31;
  	
@@ -1292,7 +1900,7 @@ index 88dfbc4..f0f1e8c 100644
  	protected void ReadModDataFromNBT( NBTTagCompound tag )
  	{
  		if ( tag.hasKey( "fcTimeOfLastSpawnAssignment" ) )
-@@ -2282,6 +2345,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2366,6 +2365,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  		{
  			m_iInGloomCounter = tag.getInteger( "fcGloomCounter" );
  		}
@@ -1309,7 +1917,7 @@ index 88dfbc4..f0f1e8c 100644
  	}
  	
  	protected void WriteModDataToNBT( NBTTagCompound tag )
-@@ -2301,6 +2374,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2385,6 +2394,9 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	 	
  	 	tag.setInteger( "fcGloomLevel", GetGloomLevel() );
  	 	tag.setInteger( "fcGloomCounter", m_iInGloomCounter );
@@ -1319,7 +1927,7 @@ index 88dfbc4..f0f1e8c 100644
  	}
  	
  	@Override
-@@ -2373,13 +2449,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2457,13 +2469,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	@Override
  	public boolean CanJump()
  	{		
@@ -1335,7 +1943,31 @@ index 88dfbc4..f0f1e8c 100644
  	}
  	
  	@Override
-@@ -2591,7 +2667,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+@@ -2608,7 +2620,7 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	{
+ 		float fModifier = GetHealthAndExhaustionModifier();
+ 		
+-		if ( GetGloomLevel() > 0 )
++		if (GetGloomLevel() > 0 && !this.capabilities.isCreativeMode)
+ 		{
+ 			fModifier *= 0.5F;
+ 		}
+@@ -2631,7 +2643,13 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	@Override
+ 	protected float GetLadderVerticalMovementModifier()
+ 	{
+-		return GetHealthAndExhaustionModifierWithSightlessModifier();
++		float modifier = GetHealthAndExhaustionModifierWithSightlessModifier(); 
++
++		if (this.isUsingItem()) {
++			modifier *= 0.5F;
++		}
++
++		return modifier;
+ 	}    
+ 	
+ 	protected float GetJumpingHorizontalMovementModifier()        
+@@ -2675,11 +2693,15 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	
  	public boolean HasStatusPenalty()
  	{
@@ -1344,7 +1976,15 @@ index 88dfbc4..f0f1e8c 100644
  	}
  	
  	public int GetMaximumStatusPenaltyLevel()
-@@ -3086,13 +3162,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
+ 	{
++		if (this.capabilities.isCreativeMode) {
++			return 0;
++		}
++		
+ 		int iMaximumPenaltyLevel = GetHealthPenaltyLevel();
+ 		int iHungerPenaltyLevel = GetHungerPenaltyLevel();
+ 		
+@@ -3170,13 +3192,16 @@ public abstract class EntityPlayer extends EntityLiving implements ICommandSende
  	protected boolean IsPlayerHoldingSail()
  	{
  		ItemStack currentItemStack = inventory.mainInventory[inventory.currentItem];
@@ -1369,10 +2009,18 @@ index 88dfbc4..f0f1e8c 100644
  	
  	@Override
 diff --git a/minecraft_server/net/minecraft/src/EntityPlayerMP.java b/minecraft_server/net/minecraft/src/EntityPlayerMP.java
-index 7aeff1d..5ae9f76 100644
+index 3146155..dd02485 100644
 --- a/minecraft_server/net/minecraft/src/EntityPlayerMP.java
 +++ b/minecraft_server/net/minecraft/src/EntityPlayerMP.java
-@@ -1186,7 +1186,7 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+@@ -1179,14 +1179,14 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+ 	
+ 	private void UpdateHealthAndHungerEffects()
+ 	{
+-		if ( !isDead && ( worldObj.getTotalWorldTime() + (long)entityId ) % 80L == 0L && !this.capabilities.isCreativeMode)
++		if ( !isDead && ( worldObj.getTotalWorldTime() + (long)entityId ) % 80L == 0L )
+ 		{
+ 			if ( foodStats.getFoodLevel() <= 0 && foodStats.getSaturationLevel() <= 0F )
+ 			{
  				addPotionEffect( new PotionEffect( Potion.confusion.getId(), 180, 0, true ) );                            
  			}
  			
@@ -1381,14 +2029,23 @@ index 7aeff1d..5ae9f76 100644
  			{
  				addPotionEffect( new PotionEffect( Potion.blindness.getId(), 180, 0, true ) );                            
  			}
-@@ -1252,87 +1252,19 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+@@ -1196,7 +1196,7 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
+ 	@Override
+ 	protected void UpdateGloomState()
+ 	{
+-		if ( !isDead && !this.capabilities.isCreativeMode)
++		if ( !isDead )
+ 		{
+ 			if ( IsInGloom() )
+ 			{
+@@ -1252,94 +1252,26 @@ public class EntityPlayerMP extends EntityPlayer implements ICrafting
  	@Override
  	protected void UpdateFatPenaltyLevel()
  	{
 -		int iFat = (int)foodStats.getSaturationLevel();
 -		int iFatLevel = 4;
 -		
--		if ( iFat < 12 )
+-		if ( iFat < 12 || this.capabilities.isCreativeMode)
 -		{
 -			iFatLevel = 0;
 -		}
@@ -1415,7 +2072,7 @@ index 7aeff1d..5ae9f76 100644
 -		int iHunger = foodStats.getFoodLevel();
 -		int iPenaltyLevel = 5;
 -		
--		if ( iHunger > 24 )
+-		if ( iHunger > 24 || this.capabilities.isCreativeMode)
 -		{
 -			iPenaltyLevel = 0;
 -		}
@@ -1446,7 +2103,7 @@ index 7aeff1d..5ae9f76 100644
 -		int iHealth = getHealth();
 -		int iPenaltyLevel = 5;
 -		
--		if ( iHealth > 10 )
+-		if ( iHealth > 10 || this.capabilities.isCreativeMode)
 -		{
 -			iPenaltyLevel = 0;
 -		}
@@ -1472,6 +2129,14 @@ index 7aeff1d..5ae9f76 100644
  	}
  	
  	private boolean IsInGloom()
+ 	{
+ 		if ( !capabilities.disableDamage ) // disable darkness effects in creative
+ 		{
+-			if ( !isPotionActive( Potion.nightVision ) && worldObj.provider.dimensionId == 0 )
++			if ( !isPotionActive( Potion.nightVision ) && (worldObj.provider.dimensionId == 0 || worldObj.provider.dimensionId == -1) )
+ 			{
+ 				int i = MathHelper.floor_double( posX );
+ 				int j = MathHelper.floor_double( posY - yOffset );
 diff --git a/minecraft_server/net/minecraft/src/FoodStats.java b/minecraft_server/net/minecraft/src/FoodStats.java
 index 4518192..ad848c3 100644
 --- a/minecraft_server/net/minecraft/src/FoodStats.java
@@ -1700,3 +2365,86 @@ index 0fc2659..0862737 100644
  							var21.PreInitCreature();
  							// END FCMOD
  							var21.setLocationAndAngles((double)var18, (double)var19, (double)var20, par6Random.nextFloat() * 360.0F, 0.0F);
+diff --git a/minecraft_server/net/minecraft/src/Teleporter.java b/minecraft_server/net/minecraft/src/Teleporter.java
+index 928b9bf..ddb534a 100644
+--- a/minecraft_server/net/minecraft/src/Teleporter.java
++++ b/minecraft_server/net/minecraft/src/Teleporter.java
+@@ -73,7 +73,7 @@ public class Teleporter
+ 	 */
+ 	public boolean placeInExistingPortal(Entity par1Entity, double par2, double par4, double par6, float par8)
+ 	{
+-		short var9 = 128;
++		int var9 = par1Entity.dimension==-1 ? 20 : 160;
+ 		double var10 = -1.0D;
+ 		int var12 = 0;
+ 		int var13 = 0;
+diff --git a/minecraft_server/net/minecraft/src/WorldGenFire.java b/minecraft_server/net/minecraft/src/WorldGenFire.java
+index 7743bc7..b5910f0 100644
+--- a/minecraft_server/net/minecraft/src/WorldGenFire.java
++++ b/minecraft_server/net/minecraft/src/WorldGenFire.java
+@@ -6,18 +6,6 @@ public class WorldGenFire extends WorldGenerator
+ {
+ 	public boolean generate(World par1World, Random par2Random, int par3, int par4, int par5)
+ 	{
+-		for (int var6 = 0; var6 < 64; ++var6)
+-		{
+-			int var7 = par3 + par2Random.nextInt(8) - par2Random.nextInt(8);
+-			int var8 = par4 + par2Random.nextInt(4) - par2Random.nextInt(4);
+-			int var9 = par5 + par2Random.nextInt(8) - par2Random.nextInt(8);
+-
+-			if (par1World.isAirBlock(var7, var8, var9) && par1World.getBlockId(var7, var8 - 1, var9) == Block.netherrack.blockID)
+-			{
+-				par1World.setBlock(var7, var8, var9, Block.fire.blockID, 0, 2);
+-			}
+-		}
+-
+ 		return true;
+ 	}
+ }
+diff --git a/minecraft_server/net/minecraft/src/WorldProviderHell.java b/minecraft_server/net/minecraft/src/WorldProviderHell.java
+index d9c3bf5..5066218 100644
+--- a/minecraft_server/net/minecraft/src/WorldProviderHell.java
++++ b/minecraft_server/net/minecraft/src/WorldProviderHell.java
+@@ -28,32 +28,7 @@ public class WorldProviderHell extends WorldProvider
+ 	 */
+ 	public Vec3 getFogColor(float par1, float par2, int x, int y, int z)
+ 	{
+-		BiomeGenBase biome =  this.worldObj.getBiomeGenForCoords(x, z);
+-		
+-		if (biome instanceof BTABiomeGenNetherBase) {
+-			Vec3[][] biomeColors = new Vec3[5][5];
+-			
+-			for (int i = 0; i < 5; i++) {
+-				for (int j = 0; j < 5; j++) {
+-					biomeColors[i][j] = ((BTABiomeGenNetherBase) this.worldObj.getBiomeGenForCoords(x - 2 + i, z - 2 + j)).getFogColor(this.worldObj);
+-				}
+-			}
+-			
+-			Vec3 color = this.worldObj.getWorldVec3Pool().getVecFromPool(0, 0, 0);
+-			
+-			for (int i = 0; i < 5; i++) {
+-				for (int j = 0; j < 5; j++) {
+-					color.xCoord += biomeColors[i][j].xCoord / 25;
+-					color.yCoord += biomeColors[i][j].yCoord / 25;
+-					color.zCoord += biomeColors[i][j].zCoord / 25;
+-				}
+-			}
+-			
+-			return color;
+-		}
+-		else {
+-			return this.worldObj.getWorldVec3Pool().getVecFromPool(0.2, 0.03, 0.03);
+-		}
++		return this.worldObj.getWorldVec3Pool().getVecFromPool(0.0, 0.0, 0.0);
+ 	}
+ 
+ 	/**
+@@ -61,7 +36,7 @@ public class WorldProviderHell extends WorldProvider
+ 	 */
+ 	protected void generateLightBrightnessTable()
+ 	{
+-		float var1 = 0.1F;
++		float var1 = 0.0F;
+ 
+ 		for (int var2 = 0; var2 <= 15; ++var2)
+ 		{

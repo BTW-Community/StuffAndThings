@@ -6,8 +6,10 @@ import java.util.Random;
 
 public class FCBlockAnvil extends Block
 {
-	private static YYStuffAndThings yyStuffAndThings = new YYStuffAndThings();
-	
+	static
+	{
+		YYStuffAndThings.getInstance();
+	}
 	FCModelBlockAnvil m_model = new FCModelBlockAnvil();
 	
 	protected FCBlockAnvil( int iBlockID )

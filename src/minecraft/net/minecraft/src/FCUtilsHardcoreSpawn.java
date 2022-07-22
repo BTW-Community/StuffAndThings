@@ -176,7 +176,6 @@ public class FCUtilsHardcoreSpawn
 		newPlayer.setMaxFood(6*newPlayer.getMaxHealth()/7);
 		newPlayer.foodStats.setFoodLevel( newPlayer.foodStats.maxFood);
 		newPlayer.health = newPlayer.getMaxHealth();
-		newPlayer.numberOfDeaths = oldPlayer.numberOfDeaths+1;
 
 		if ( !FCUtilsWorld.GameProgressHasNetherBeenAccessedServerOnly() || FCBetterThanWolves.alwaysSpawnTogether )
 		{
